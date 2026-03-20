@@ -39,6 +39,10 @@ def _env_nullable_int(name: str, default: int | None) -> int | None:
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
 MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "mistral-large-latest")
 
+# API OpenAI (utilisee pour lettre + message recruteur, avec fallback Mistral)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
 # Identifiants Welcome to the Jungle
 WTTJ_EMAIL = os.getenv("WTTJ_EMAIL", "")
 WTTJ_PASSWORD = os.getenv("WTTJ_PASSWORD", "")

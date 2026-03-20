@@ -13,12 +13,14 @@
 
 <hr/>
 
-Ce bot **Python** automatise l'envoi de candidatures sur **Welcome to the Jungle** et le portail **Mon VIE**. Fini les tâches répétitives : le bot navigue sur les offres, analyse les descriptions, extrait votre CV et génère des **lettres de motivation ultra-personnalisées** avec l'aide de **Mistral AI**.
+Ce bot **Python** automatise l'envoi de candidatures sur **Welcome to the Jungle**, **Glassdoor** (Easy Apply) et le portail **Mon VIE**. Fini les tâches répétitives : le bot navigue sur les offres, analyse les descriptions, extrait votre CV et génère des **lettres de motivation ultra-personnalisees** avec l'aide de l'IA.
 
 ## ✨ Fonctionnalités
 
 - 🚀 **Automatisation complète :** Recherche, pagination, navigation et remplissage des formulaires automatiques via Playwright.
-- 🧠 **IA Intégrée (Mistral) :** Génération de lettres de motivation qualitatives et réponses aux questions personnalisées en fonction du poste et de votre profil.
+- 🧠 **IA Integree (OpenAI + Mistral) :**
+  - Lettre de motivation et message recruteur via OpenAI (`gpt-4o-mini` par defaut), avec fallback automatique sur Mistral.
+  - Reponses aux questions de formulaire via Mistral.
 - 📄 **Analyse de CV :** Support automatique de l'extraction de texte sur les CV au format PDF (via `PyPDF2`) ou Texte.
 - 🕵️ **Multi-Plateformes :** Suivi intelligent des balises URL, compatible pour les annonces *Welcome to the Jungle* et le portail *Mon VIE*.
 - 🛡️ **Anti-Doublons :** Suivi d'historique local dans `candidatures.json` (via `logger.py`) pour ne pas postuler aux mêmes annonces deux fois.
@@ -26,16 +28,18 @@ Ce bot **Python** automatise l'envoi de candidatures sur **Welcome to the Jungle
 
 ---
 
-## 💡 Le point fort : L'API Mistral est GRATUITE ! 💰
+## 💡 IA: quel provider est utilise ?
 
-Contrairement à de nombreuses autres intégrations qui facturent avec OpenAI (ChatGPT) ou Anthropic (Claude), **l'API de Mistral AI vous permet de démarrer avec des crédits gratuits**. 
+Le bot utilise deux providers:
+- **OpenAI** pour la **lettre de motivation** et le **message recruteur** (modele par defaut `gpt-4o-mini`).
+- **Mistral** pour le reste (notamment les questions de formulaire), et en fallback si OpenAI est indisponible.
 
-### Comment obtenir votre clé gratuite :
+### Comment obtenir vos cles API :
 1. Rendez-vous sur la plateforme [Console Mistral AI 🔗](https://console.mistral.ai/).
-2. Créez un compte ou connectez-vous avec vos identifiants.
+2. Creez un compte ou connectez-vous avec vos identifiants.
 3. Allez dans le volet de gauche, rubrique **API keys**.
-4. Vous bénéficierez d'un "Free Tier" ou pourrez générer des clés avec la version d'essai sans ajouter de moyen de paiement (soumis à un *rate limit* généreux plus que suffisant pour vos premières vagues de candidatures massives).
-5. Copiez votre clé d'API (commençant par `key_...`) et ajoutez-la à votre fichier `.env`.
+4. Copiez votre cle d'API (commencant par `key_...`) et ajoutez-la a votre fichier `.env`.
+5. Rendez-vous aussi sur [OpenAI Platform 🔗](https://platform.openai.com/) pour creer votre cle `OPENAI_API_KEY`.
 
 ---
 
@@ -73,8 +77,13 @@ cp .env.example .env
 
 2. **Remplir vos informations personnelles** dans le `.env` créé :
 ```env
-# API Mistral (Clé gratuite !)
+# API Mistral
 MISTRAL_API_KEY=votre_cle_api_mistral
+MISTRAL_MODEL=mistral-large-latest
+
+# API OpenAI (lettre + message recruteur)
+OPENAI_API_KEY=votre_cle_api_openai
+OPENAI_MODEL=gpt-4o-mini
 
 # Informations du candidat
 PRENOM=Jean
@@ -109,10 +118,16 @@ python main.py "https://www.welcometothejungle.com/fr/jobs?query=marketing&page=
 Vous pouvez affiner l'exécution avec les arguments suivants :
 - `--max <int>` : Limite le nombre total de dépôts de candidatures générées.
 - `--max-pages <int>` : Limite le nombre de pages (ou de vagues de chargements "Voir plus") parcourues parmi les résultats.
+- `--test-letter` : Scrape une URL d'offre unique et génère uniquement la lettre (sans connexion ni soumission).
 
 **Exemple avec paramètres :**
 ```bash
 python main.py "https://www.welcometothejungle.com/fr/jobs?query=data" --max 10 --max-pages 2
+```
+
+**Exemple test lettre (sans candidature):**
+```bash
+python main.py "https://www.welcometothejungle.com/fr/companies/resah/jobs/charge-de-marketing-services-generaux-et-services-techniques_paris" --test-letter
 ```
 
 ---
@@ -121,7 +136,8 @@ python main.py "https://www.welcometothejungle.com/fr/jobs?query=data" --max 10 
 
 ```text
 ├── main.py                 # 🚀 Orchestrateur principal & logique de navigation (Playwright)
-├── ai_helper.py            # 🧠 Appels d'API Mistral (lettres de motivation, questions personnalisées)
+├── ai_helper.py            # 🧠 Appels OpenAI/Mistral (routing IA + fallback)
+├── prompts/lettre_motivation_prompt.txt # ✍️ Prompt editable pour la lettre
 ├── cv_reader.py            # 📄 Module d'extraction texte (parsing des PDF et TXT)
 ├── logger.py               # 📝 Système de tracking (gère candidatures.json)
 ├── config.py               # ⚙️ Chargement sécurisé des variables

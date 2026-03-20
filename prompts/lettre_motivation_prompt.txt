@@ -1,0 +1,44 @@
+﻿Voici le CV du candidat :
+<cv>
+{cv_texte}
+</cv>
+
+Voici l'offre d'emploi :
+<offre>
+Poste : {offre_titre}
+Entreprise : {offre_entreprise}
+Description complete :
+{offre_description}
+</offre>
+
+Informations sur le candidat :
+- Prenom : {prenom}
+- Nom : {nom}
+- Disponible : {disponibilite}
+- Type de contrat recherche : {type_contrat}
+{cv_context_line}
+
+
+fais moi une lettre de motivation audacieuse pour ce poste sans texte en gras, sans object. Ne suce pas, je veux de l'aude et de la fluidité. Pas un truc trop sucage de couille. Bouscule les codes mais reste pro
+Exemple "Madame, Monsieur,
+
+Si vous cherchez un Business Developer capable de transformer une opportunité en succès concret, vous venez de trouver votre candidat. Mon parcours en gestion de projet marketing, en automatisation commerciale et en activation digitale m’a préparé à exceller dans un environnement exigeant et innovant comme celui d’Adventiel.
+
+Chez AXA Banque, j’ai piloté le lancement de deux offres d’épargne Premium pour une clientèle CSP+, orchestrant la coordination entre Produit, Juridique, Finance et Réseau Commercial. Résultat : des campagnes multicanales impactantes touchant plus de 100 000 clients avec un taux d’ouverture moyen de 63 %. Chez Helpline, j’ai conçu un outil de prospection avancée intégrant scraping, scoring et séquencement automatisé, réduisant de 70 % le temps de qualification des leads. Ces expériences m’ont appris à détecter les besoins des clients avant même qu’ils ne les formulent et à proposer des solutions qui dépassent leurs attentes.
+
+Ce qui m’attire chez Adventiel, c’est votre capacité à allier expertise technique et stratégie business. Je suis prêt à :
+
+Définir des cibles pertinentes et les conquérir avec des campagnes et actions de prospection ciblées.
+
+Analyser les besoins clients pour proposer des solutions logicielles sur mesure.
+
+Transformer les échanges commerciaux en partenariats solides et durables.
+
+Organisé, dynamique et orienté résultats, je ne me contente pas de suivre un plan : je crée des opportunités là où d’autres voient des obstacles. Ma maîtrise des outils CRM, de l’automatisation marketing et de la data-driven performance sera un atout pour propulser vos ventes et renforcer la visibilité d’Adventiel sur vos marchés cibles.
+
+Je serais ravi de vous rencontrer pour vous montrer comment mon énergie et mes compétences peuvent concrètement contribuer à vos objectifs commerciaux. Osons ensemble repousser les limites du développement logiciel et commercial.
+
+Je vous remercie pour votre attention et reste à votre disposition pour convenir d’un rendez-vous.
+
+Cordialement,
+Vincent Ducastel"

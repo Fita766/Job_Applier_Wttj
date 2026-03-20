@@ -1,4 +1,4 @@
-﻿"""
+"""
 ðŸ¤– Welcome to the Jungle - Bot de candidature automatique
 =========================================================
 Utilisation :
@@ -29,9 +29,78 @@ def detecter_plateforme(url: str) -> str:
     host = (urlparse(url).netloc or "").lower()
     if "welcometothejungle.com" in host:
         return "wttj"
+    if "glassdoor." in host:
+        return "glassdoor"
+    if "hellowork.com" in host:
+        return "hellowork"
     if "mon-vie-via.businessfrance.fr" in host:
         return "vie"
     return "inconnue"
+
+
+def est_url_offre_directe(url: str) -> bool:
+    """Indique si l'URL semble etre une page d'offre directe (et non une recherche)."""
+    try:
+        parsed = urlparse(url)
+        path = (parsed.path or "").lower()
+        query = (parsed.query or "").lower()
+    except Exception:
+        return False
+    host = (parsed.netloc or "").lower()
+    if "welcometothejungle.com" in host:
+        if "/jobs/" not in path:
+            return False
+        if "query=" in query:
+            return False
+        return True
+    if "glassdoor." in host:
+        return est_url_offre_glassdoor(url)
+    if "hellowork.com" in host:
+        return est_url_offre_hellowork(url)
+    return False
+
+
+def est_url_offre_glassdoor(url: str) -> bool:
+    """Filtre les vraies pages d'offre Glassdoor et exclut les pages de recherche/index."""
+    try:
+        parsed = urlparse(url)
+        path = (parsed.path or "").lower().strip()
+    except Exception:
+        return False
+
+    host = (parsed.netloc or "").lower()
+    if "glassdoor." not in host:
+        return False
+    if not path or path.endswith("/index.htm"):
+        return False
+    if "emplois-srch" in path or "-emplois-" in path:
+        return False
+    if "/job-listing/" in path:
+        return True
+    if "joblisting.htm" in path:
+        return True
+    # Format frequent FR: /Job/<slug>-JV_<id>.htm
+    if "/job/" in path and "-jv_" in path:
+        return True
+    return False
+
+
+def est_url_offre_hellowork(url: str) -> bool:
+    """Filtre les vraies pages d'offre Hellowork et exclut les pages de recherche."""
+    try:
+        parsed = urlparse(url)
+        path = (parsed.path or "").lower().strip()
+    except Exception:
+        return False
+
+    host = (parsed.netloc or "").lower()
+    if "hellowork.com" not in host:
+        return False
+    if "/emploi/recherche" in path or "recherche.html" in path:
+        return False
+    if "/fr-fr/emplois/" in path or "/fr-fr/offres/" in path:
+        return path.endswith(".html")
+    return False
 
 
 def detecter_langue_offre(offre: dict) -> str:
@@ -43,31 +112,120 @@ def detecter_langue_offre(offre: dict) -> str:
 
     tokens_titre = re.findall(r"[a-zA-Z]+", titre)
     mots_en_titre = {
-        "manager", "project", "sales", "business", "account", "engineer",
-        "developer", "analyst", "officer", "specialist", "assistant",
-        "coordinator", "lead", "marketing", "hr",
+        "marketing", "manager", "growth", "product", "business", "developer",
+        "engineer", "analyst", "owner", "lead", "sales", "success",
     }
     mots_fr_titre = {
-        "charge", "chargé", "responsable", "ingenieur", "ingénieur",
-        "commercial", "developpement", "développement", "assistant",
+        "chef", "projet", "charge", "chargé", "responsable", "developpement",
+        "développement", "commercial", "communication", "alternance",
     }
     score_titre_en = sum(1 for t in tokens_titre if t.lower() in mots_en_titre)
     score_titre_fr = sum(1 for t in tokens_titre if t.lower() in mots_fr_titre)
     if score_titre_en >= 2 and score_titre_en > score_titre_fr:
         return "en"
 
-    marqueurs_en = [
-        "job description", "key responsibilities", "required skills", "english",
-        "project manager", "business development", "apply", "thank you", "position",
+    tokens = re.findall(r"[a-zA-Z]+", texte)
+    mots_en = {
+        "the", "and", "with", "for", "you", "your", "we", "our", "will",
+        "experience", "requirements", "skills", "role", "job", "apply",
+    }
+    mots_fr = {
+        "le", "la", "les", "et", "avec", "pour", "vous", "nous", "notre",
+        "experience", "expérience", "profil", "poste", "mission", "candidature",
+    }
+    score_en = sum(1 for t in tokens if t.lower() in mots_en)
+    score_fr = sum(1 for t in tokens if t.lower() in mots_fr)
+    if score_en > score_fr + 1:
+        return "en"
+    return "fr"
+
+
+def extraire_question_utilisable(label_brut: str) -> str:
+    """Extrait une question courte et exploitable depuis un bloc de texte potentiellement bruité."""
+    texte = (label_brut or "").strip()
+    if not texte:
+        return ""
+
+    lignes = [re.sub(r"\s+", " ", l).strip() for l in texte.splitlines()]
+    lignes = [l for l in lignes if l]
+    if not lignes:
+        return ""
+
+    # Priorite a la premiere ligne interrogative exploitable.
+    for l in lignes:
+        ll = l.lower()
+        if len(l) < 5 or len(l) > 220:
+            continue
+        if "@" in l or ll.startswith("tel") or ll.startswith("phone"):
+            continue
+        if "http://" in ll or "https://" in ll:
+            continue
+        if "?" in l:
+            return l
+
+    # Fallback: premiere ligne raisonnable.
+    for l in lignes:
+        ll = l.lower()
+        if len(l) < 5 or len(l) > 220:
+            continue
+        if "@" in l or ll.startswith("tel") or ll.startswith("phone"):
+            continue
+        return l
+    return ""
+
+
+def detecter_langue_question(question: str, langue_par_defaut: str = "fr") -> str:
+    """Detecte rapidement la langue d'une question formulaire (fr/en)."""
+    q = (question or "").strip().lower()
+    if not q:
+        return langue_par_defaut
+
+    marqueurs_en = {
+        "are you", "will you", "do you", "can you", "have you", "english",
+        "experience", "years", "salary", "office", "work from",
+    }
+    marqueurs_fr = {
+        "etes-vous", "parlez-vous", "avez-vous", "pouvez-vous", "francais",
+        "expérience", "annees", "années", "salaire", "bureau", "presentiel",
+    }
+
+    score_en = sum(1 for m in marqueurs_en if m in q)
+    score_fr = sum(1 for m in marqueurs_fr if m in q)
+    if score_en > score_fr:
+        return "en"
+    if score_fr > score_en:
+        return "fr"
+    return langue_par_defaut
+
+
+def detecter_type_reponse_question(question: str, tag: str, type_input: str) -> str:
+    """Determine le type de reponse attendu pour une question supplementaire."""
+    if tag == "select":
+        return "choix"
+    if type_input == "number":
+        return "nombre"
+
+    q = (question or "").strip().lower()
+    motifs_oui_non = [
+        "are you", "will you", "do you", "can you", "have you",
+        "etes-vous", "avez-vous", "pouvez-vous", "parlez-vous",
+        "seriez-vous", "es-tu", "as-tu", "peux-tu",
     ]
-    marqueurs_fr = [
-        "description du poste", "missions", "profil recherche", "competences",
-        "poste", "candidature", "francais", "merci", "responsabilites",
-    ]
-    accents_fr = len(re.findall(r"[éèêàùâîôç]", texte))
-    score_en = sum(1 for m in marqueurs_en if m in texte)
-    score_fr = sum(1 for m in marqueurs_fr if m in texte) + (1 if accents_fr >= 5 else 0)
-    return "en" if score_en > score_fr else "fr"
+    if "?" in q and any(m in q for m in motifs_oui_non):
+        return "oui_non"
+    return "texte"
+
+
+def choisir_langue_reponse_question(question: str, langue_offre: str = "fr") -> str:
+    """
+    Regle metier:
+    - Si l'offre est en anglais, toutes les reponses sont en anglais.
+    - Sinon, une question en anglais doit etre repondue en anglais.
+    """
+    base = (langue_offre or "fr").strip().lower()
+    if base.startswith("en"):
+        return "en"
+    return detecter_langue_question(question, langue_par_defaut="fr")
 
 
 def page_demande_connexion_ou_compte(target) -> bool:
@@ -97,6 +255,11 @@ def page_demande_connexion_ou_compte(target) -> bool:
         "register",
     ]
     return any(m in body for m in marqueurs)
+
+
+def _navigation_interrompue(err: Exception) -> bool:
+    msg = str(err).lower()
+    return "interrupted by another navigation" in msg or "net::err_aborted" in msg
 
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -249,6 +412,38 @@ def se_connecter_vie(page):
         print("  Reponse invalide. Tape 'oui' ou 'non'.")
 
 
+def se_connecter_glassdoor(page):
+    """Connexion manuelle a Glassdoor avant collecte/postulation."""
+    print("Connexion a Glassdoor (manuelle)...")
+    page.goto("https://www.glassdoor.fr/index.htm", wait_until="domcontentloaded")
+    time.sleep(2)
+    accepter_cookies(page)
+    time.sleep(1)
+
+    print("  [ACTION] Connecte-toi manuellement a Glassdoor dans le navigateur.")
+    try:
+        input("  Quand c'est bon, appuie simplement sur Entree pour continuer... ")
+    except EOFError:
+        time.sleep(1)
+    print("  Connexion Glassdoor confirmee par l'utilisateur")
+
+
+def se_connecter_hellowork(page):
+    """Connexion manuelle a Hellowork avant collecte/postulation."""
+    print("Connexion a Hellowork (manuelle)...")
+    page.goto("https://www.hellowork.com/fr-fr/emploi/recherche.html", wait_until="domcontentloaded")
+    time.sleep(2)
+    accepter_cookies(page)
+    time.sleep(1)
+
+    print("  [ACTION] Connecte-toi manuellement a Hellowork dans le navigateur.")
+    try:
+        input("  Quand c'est bon, appuie simplement sur Entree pour continuer... ")
+    except EOFError:
+        time.sleep(1)
+    print("  Connexion Hellowork confirmee par l'utilisateur")
+
+
 def extraire_offres_page(page):
     """Extrait les liens des offres sur la page de recherche actuelle."""
     offres = []
@@ -323,6 +518,190 @@ def extraire_offres_page_vie(page):
             vus.add(url)
             offres.append({"url": url})
     return offres
+
+
+def extraire_offres_page_glassdoor(page):
+    """Extrait les URLs d'offres Glassdoor visibles."""
+    offres = []
+    liens = []
+    for _ in range(4):
+        try:
+            liens = page.eval_on_selector_all(
+                'a[href*="/job-listing/"], a[href*="/Job/"], a[href*="/Emploi/"]',
+                """elements => elements
+                    .map(el => el.href)
+                    .filter(Boolean)"""
+            )
+        except Exception:
+            liens = []
+        if liens:
+            break
+        try:
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        except Exception:
+            pass
+        time.sleep(1)
+
+    vus = set()
+    for href in liens:
+        url = (href or "").split("?")[0].strip()
+        if not url:
+            continue
+        if not est_url_offre_glassdoor(url):
+            continue
+        if url in vus:
+            continue
+        vus.add(url)
+        offres.append({"url": url})
+    return offres
+
+
+def extraire_offres_page_hellowork(page):
+    """Extrait les URLs d'offres Hellowork visibles."""
+    offres = []
+    liens = []
+    for _ in range(4):
+        try:
+            liens = page.eval_on_selector_all(
+                'a[href*="/fr-fr/emplois/"], a[href*="/fr-fr/offres/"]',
+                """elements => elements.map(el => el.href).filter(Boolean)"""
+            )
+        except Exception:
+            liens = []
+        if liens:
+            break
+        try:
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        except Exception:
+            pass
+        time.sleep(1)
+
+    vus = set()
+    for href in liens:
+        url = (href or "").split("?")[0].strip()
+        if not est_url_offre_hellowork(url):
+            continue
+        if url in vus:
+            continue
+        vus.add(url)
+        offres.append({"url": url})
+    return offres
+
+
+def activer_filtre_easy_apply_glassdoor(page):
+    """Tente d'activer le filtre Easy Apply / Candidature facile."""
+    selecteurs = [
+        'button:has-text("Candidature facile")',
+        'button:has-text("Easy Apply")',
+        'label:has-text("Candidature facile")',
+        'label:has-text("Easy Apply")',
+        '[data-test*="easy-apply"]',
+    ]
+    for sel in selecteurs:
+        try:
+            el = page.query_selector(sel)
+            if el and el.is_visible():
+                el.click()
+                time.sleep(1.5)
+                print("  [OK] Filtre Easy Apply active")
+                return True
+        except Exception:
+            continue
+    print("  [WARN] Filtre Easy Apply introuvable, poursuite sans confirmation explicite")
+    return False
+
+
+def extraire_cartes_glassdoor(page) -> list[dict]:
+    """
+    Extrait les cartes Glassdoor visibles (sans dépendre d'URL d'offre).
+    Retourne des entrées avec id pseudo-stable + titre/entreprise.
+    """
+    cartes = page.evaluate(
+        """() => {
+            const nodes = Array.from(document.querySelectorAll('li, article, div'));
+            const out = [];
+            const seen = new Set();
+            const bad = ['sponsorise', 'sponsored', 'emplois', 'jobs', 'rechercher'];
+
+            function clean(s){ return (s || '').replace(/\\s+/g, ' ').trim(); }
+            function isBadLine(s){
+                const l = s.toLowerCase();
+                if (!l) return true;
+                if (bad.some(b => l === b)) return true;
+                if (l.includes('candidature facile') || l.includes('easy apply')) return true;
+                if (/^\\d+[jk]?\\s?€/.test(l) || /\\b(k€|€)\\b/.test(l)) return true;
+                if (l.length < 3) return true;
+                return false;
+            }
+
+            for (const el of nodes) {
+                const txt = clean(el.innerText);
+                if (!txt) continue;
+                const low = txt.toLowerCase();
+                if (!(low.includes('candidature facile') || low.includes('easy apply'))) continue;
+                const rect = el.getBoundingClientRect();
+                if (rect.width < 180 || rect.height < 70) continue;
+
+                const lines = txt.split('\\n').map(clean).filter(Boolean);
+                const useful = lines.filter(l => !isBadLine(l));
+                if (useful.length < 2) continue;
+                const entreprise = useful[0];
+                const titre = useful[1];
+                const key = `${entreprise}||${titre}`.toLowerCase();
+                if (seen.has(key)) continue;
+                seen.add(key);
+
+                out.push({ entreprise, titre, key });
+            }
+            return out;
+        }"""
+    ) or []
+
+    offres = []
+    for c in cartes:
+        entreprise = (c.get("entreprise") or "").strip()
+        titre = (c.get("titre") or "").strip()
+        if not entreprise or not titre:
+            continue
+        pseudo_url = f"glassdoor://{_slug_fichier(entreprise)}::{_slug_fichier(titre)}"
+        offres.append({"url": pseudo_url, "entreprise": entreprise, "titre": titre, "source": "card"})
+    return offres
+
+
+def _selectionner_carte_glassdoor(page, offre: dict) -> bool:
+    """Selectionne une carte Glassdoor par titre/entreprise dans la liste gauche."""
+    titre = (offre.get("titre") or "").strip()
+    entreprise = (offre.get("entreprise") or "").strip()
+    if not titre:
+        return False
+
+    try:
+        ok = page.evaluate(
+            """(data) => {
+                const nodes = Array.from(document.querySelectorAll('li, article, div'));
+                const titre = (data.titre || '').toLowerCase().trim();
+                const entreprise = (data.entreprise || '').toLowerCase().trim();
+                function clean(s){ return (s || '').replace(/\\s+/g, ' ').trim().toLowerCase(); }
+                for (const el of nodes) {
+                    const txt = clean(el.innerText);
+                    if (!txt) continue;
+                    if (!(txt.includes('candidature facile') || txt.includes('easy apply'))) continue;
+                    if (!txt.includes(titre)) continue;
+                    if (entreprise && !txt.includes(entreprise)) continue;
+                    el.click();
+                    return true;
+                }
+                return false;
+            }""",
+            {"titre": titre, "entreprise": entreprise},
+        )
+        return bool(ok)
+    except Exception:
+        return False
+
+
+def _url_est_smartapply(url: str) -> bool:
+    return "smartapply.indeed.com" in (url or "").lower()
 
 
 def _construire_url_page(url_recherche: str, page_num: int) -> str:
@@ -462,6 +841,170 @@ def recuperer_toutes_offres_vie(page, url_recherche: str, max_offres=None, max_p
     return toutes_offres
 
 
+def recuperer_toutes_offres_glassdoor(page, url_recherche: str, max_offres=None, max_pages=3) -> list[dict]:
+    """
+    Collecte les offres Glassdoor via scroll infini + bouton "Voir plus d'offres d'emplois".
+    Le filtre Easy Apply est active en debut de flux.
+    """
+    print(f"\n[SEARCH] Recuperation des offres Glassdoor depuis :\n   {url_recherche}\n")
+    nav_ok = False
+    last_err = None
+    for tentative in range(1, 9):
+        try:
+            page.goto(url_recherche, wait_until="domcontentloaded")
+            nav_ok = True
+            break
+        except Exception as e:
+            last_err = e
+            if _navigation_interrompue(e):
+                print(f"  [WARN] Navigation Glassdoor interrompue (tentative {tentative}/8), nouvelle tentative...")
+                try:
+                    page.wait_for_load_state("domcontentloaded", timeout=12000)
+                except Exception:
+                    pass
+                time.sleep(1.2)
+                continue
+            raise
+    if not nav_ok:
+        raise RuntimeError(f"Echec navigation Glassdoor vers la recherche apres 8 tentatives: {last_err}")
+    time.sleep(2)
+    accepter_cookies(page)
+    time.sleep(1)
+    activer_filtre_easy_apply_glassdoor(page)
+
+    toutes_offres = []
+    urls_vues = set()
+    vague = 1
+
+    while True:
+        if max_pages is not None and vague > max_pages:
+            print(f"  [STOP] Limite de vagues atteinte ({max_pages})")
+            break
+
+        try:
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        except Exception:
+            pass
+        time.sleep(1.2)
+
+        offres = extraire_cartes_glassdoor(page)
+        if not offres:
+            print("  [WARN] Aucune carte exploitable detectee sur cette vague (mode card-only)")
+        nouvelles = [o for o in offres if o["url"] not in urls_vues]
+        toutes_offres.extend(nouvelles)
+        urls_vues.update(o["url"] for o in nouvelles)
+        print(f"  [PAGE] Vague {vague}: +{len(nouvelles)} offres (total : {len(toutes_offres)})")
+
+        if max_offres and len(toutes_offres) >= max_offres:
+            toutes_offres = toutes_offres[:max_offres]
+            break
+
+        bouton_plus = None
+        for sel in [
+            'button:has-text("Voir plus d\'offres d\'emplois")',
+            'button:has-text("Show more jobs")',
+            'button:has-text("Voir plus")',
+            'button:has-text("Show more")',
+        ]:
+            try:
+                el = page.query_selector(sel)
+                if el and el.is_visible():
+                    bouton_plus = el
+                    break
+            except Exception:
+                continue
+
+        if not bouton_plus:
+            # si aucune nouvelle offre et pas de bouton, on termine
+            if not nouvelles:
+                print("  -> plus de bouton 'voir plus' et aucune nouvelle offre")
+                break
+            vague += 1
+            continue
+
+        try:
+            bouton_plus.click()
+            time.sleep(2)
+        except Exception:
+            print("  -> impossible de charger plus d'offres, arret")
+            break
+
+        vague += 1
+
+    print(f"\n[OK] Total : {len(toutes_offres)} offres Glassdoor collectees\n")
+    return toutes_offres
+
+
+def recuperer_toutes_offres_hellowork(page, url_recherche: str, max_offres=None, max_pages=3) -> list[dict]:
+    """Collecte les offres Hellowork depuis la recherche (pagination simple)."""
+    print(f"\n[SEARCH] Recuperation des offres Hellowork depuis :\n   {url_recherche}\n")
+    page.goto(url_recherche, wait_until="domcontentloaded")
+    time.sleep(2)
+    accepter_cookies(page)
+    time.sleep(1)
+
+    toutes_offres = []
+    urls_vues = set()
+    page_num = 1
+
+    while True:
+        if max_pages is not None and page_num > max_pages:
+            print(f"  [STOP] Limite de pages atteinte ({max_pages})")
+            break
+
+        offres = extraire_offres_page_hellowork(page)
+        nouvelles = [o for o in offres if o["url"] not in urls_vues]
+        toutes_offres.extend(nouvelles)
+        urls_vues.update(o["url"] for o in nouvelles)
+        print(f"  [PAGE] Page {page_num}: +{len(nouvelles)} offres (total : {len(toutes_offres)})")
+
+        if max_offres and len(toutes_offres) >= max_offres:
+            toutes_offres = toutes_offres[:max_offres]
+            break
+
+        bouton_suivant = None
+        for sel in [
+            f'button[name="p"][value="{page_num + 1}"]',
+            'button[name="p"]:has(svg use[href*="#right"])',
+            'a[rel="next"]',
+            'button:has-text("Suivant")',
+            'a:has-text("Suivant")',
+            'button:has-text("Page suivante")',
+            'a:has-text("Page suivante")',
+        ]:
+            try:
+                el = page.query_selector(sel)
+                if el and el.is_visible():
+                    bouton_suivant = el
+                    break
+            except Exception:
+                continue
+
+        if not bouton_suivant:
+            print("  -> plus de page suivante, fin de collecte")
+            break
+
+        try:
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        except Exception:
+            pass
+        time.sleep(0.6)
+        try:
+            bouton_suivant.click()
+            try:
+                page.wait_for_load_state("domcontentloaded", timeout=5000)
+            except Exception:
+                pass # Les turbo-frames ne declenchent pas toujours domcontentloaded
+        except Exception as e:
+            print(f"  -> erreur lors du clic sur page suivante: {e}")
+            break
+        time.sleep(2.5) # Laisser le temps au contenu turbo de se mettre a jour
+        page_num += 1
+
+    print(f"\n[OK] Total : {len(toutes_offres)} offres Hellowork collectees\n")
+    return toutes_offres
+
+
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 #  SCRAPING DES DETAILS D'UNE OFFRE
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -486,7 +1029,13 @@ def extraire_details_offre(page, url: str) -> dict:
         return s
 
     # Titre du poste
-    for selector in ['[data-testid="job-title"]', 'h1[class*="title"]', ".job-title", "h1"]:
+    for selector in [
+        '[data-testid="job-title"]',
+        '[data-test="job-title"]',
+        'h1[class*="title"]',
+        ".job-title",
+        "h1",
+    ]:
         el = page.query_selector(selector)
         if el:
             txt = _nettoyer_texte(el.inner_text())
@@ -495,7 +1044,15 @@ def extraire_details_offre(page, url: str) -> dict:
                 break
     
     # Entreprise
-    for selector in ['[data-testid="company-name"]', 'a[href*="/companies/"]', '.company-name', '.w_75 h2', 'article h2']:
+    for selector in [
+        '[data-testid="company-name"]',
+        '[data-test="employer-name"]',
+        'a[href*="/companies/"]',
+        'a[href*="/Overview/"]',
+        '.company-name',
+        '.w_75 h2',
+        'article h2',
+    ]:
         el = page.query_selector(selector)
         if el:
             text = _nettoyer_texte(el.inner_text())
@@ -507,6 +1064,7 @@ def extraire_details_offre(page, url: str) -> dict:
     desc_parts = []
     for selector in [
         '[data-testid="job-description"]',
+        '[data-test="jobDescriptionContent"]',
         '.job-description',
         'section[class*="description"]',
         'div[class*="content"]',
@@ -600,12 +1158,32 @@ def normaliser_poste_actuel(offre: dict) -> str:
     # Retirer une précision finale entre parenthèses
     titre = re.sub(r"\s*\([^)]*\)\s*$", "", titre).strip()
 
+    # Retirer les marqueurs de population/type de contrat souvent ajoutés au titre
+    # Exemples: h/f, f/h, cdi, cdd, stage, alternance...
+    titre = re.sub(r"\b[hf]\s*[/\-]\s*[hf]\b", " ", titre, flags=re.IGNORECASE)
+    titre = re.sub(r"\bh\s+f\b|\bf\s+h\b", " ", titre, flags=re.IGNORECASE)
+    titre = re.sub(
+        r"\b(cdi|cdd|stage|alternance|freelance|interim|temps plein|temps partiel|full time|part time)\b",
+        " ",
+        titre,
+        flags=re.IGNORECASE,
+    )
+    titre = re.sub(r"\s+", " ", titre).strip()
+
     # Replacer un préfixe business fréquent en suffixe
     m = re.match(r"^(B2B|B2C)\s+(.+)$", titre, flags=re.IGNORECASE)
     if m:
         titre = f"{m.group(2).strip()} {m.group(1).upper()}"
 
-    return titre or "Marketing"
+    if not titre:
+        return "Marketing"
+
+    mots_maj = {"b2b", "b2c", "crm", "seo", "sea", "ui", "ux", "qa", "it"}
+    titre = " ".join(
+        mot.upper() if mot.lower() in mots_maj else mot.capitalize()
+        for mot in titre.split()
+    )
+    return titre
 
 
 def gerer_questions_supplementaires(
@@ -686,7 +1264,7 @@ def gerer_questions_supplementaires(
         if q["value"]:  # DÃ©jÃ  rempli
             continue
 
-        label = q["label"] or q["placeholder"] or q["name"]
+        label = extraire_question_utilisable(q["label"] or q["placeholder"] or q["name"])
         if not label or len(label) < 3:
             continue
 
@@ -710,11 +1288,8 @@ def gerer_questions_supplementaires(
 
         print(f"  ðŸ’¬ Question dÃ©tectÃ©e : {label[:80]}")
 
-        type_reponse = "texte"
-        if q["tag"] == "select":
-            type_reponse = "choix"
-        elif q["type"] == "number":
-            type_reponse = "nombre"
+        type_reponse = detecter_type_reponse_question(label, q["tag"], q["type"])
+        langue_question = choisir_langue_reponse_question(label, langue_offre=langue)
 
         question_prompt = label
         if q["tag"] == "select" and q.get("options"):
@@ -726,7 +1301,7 @@ def gerer_questions_supplementaires(
             offre,
             question_prompt,
             type_reponse=type_reponse,
-            langue=langue,
+            langue=langue_question,
         )
         print(f"     â†’ RÃ©ponse : {reponse[:100]}...")
 
@@ -1220,6 +1795,314 @@ def postuler_offre_vie(page, offre: dict, cv_texte: str, cv_path: str, langue: s
     return True
 
 
+def remplir_infos_contact_sans_cv(target):
+    """Remplit les champs de contact usuels sans toucher aux uploads CV."""
+    champs = [
+        (config.PRENOM, ['input[name*="first" i]', 'input[id*="first" i]']),
+        (config.NOM, ['input[name*="last" i]', 'input[id*="last" i]']),
+        (config.EMAIL, ['input[type="email"]', 'input[name*="email" i]']),
+        (config.TELEPHONE, ['input[type="tel"]', 'input[name*="phone" i]', 'input[placeholder*="telephone" i]']),
+    ]
+    for valeur, selecteurs in champs:
+        if not valeur:
+            continue
+        for sel in selecteurs:
+            remplir_champ(target, sel, valeur, timeout=1200)
+
+
+def cliquer_bouton_smartapply(target) -> str:
+    """
+    Clique un bouton SmartApply:
+    - renvoie 'submit' pour envoi final
+    - renvoie 'next' pour etape intermediaire
+    - renvoie '' si rien de pertinent
+    """
+    submit_selecteurs = [
+        'button:has-text("Envoyer")',
+        'button:has-text("Soumettre")',
+        'button:has-text("Submit")',
+        'button:has-text("Send application")',
+        'button:has-text("Submit application")',
+        'button[type="submit"]',
+    ]
+    for sel in submit_selecteurs:
+        try:
+            btn = target.query_selector(sel)
+            if btn and btn.is_visible():
+                btn.click()
+                return "submit"
+        except Exception:
+            continue
+
+    next_selecteurs = [
+        'button:has-text("Suivant")',
+        'button:has-text("Continuer")',
+        'button:has-text("Next")',
+        'button:has-text("Continue")',
+        'button:has-text("Review")',
+        'button:has-text("Verifier")',
+    ]
+    for sel in next_selecteurs:
+        try:
+            btn = target.query_selector(sel)
+            if btn and btn.is_visible():
+                btn.click()
+                return "next"
+        except Exception:
+            continue
+    return ""
+
+
+def postuler_offre_glassdoor(page, offre: dict, cv_texte: str, langue: str = "fr") -> bool:
+    """Postule a une offre Glassdoor via Easy Apply -> SmartApply."""
+    url = offre["url"]
+    titre = offre.get("titre", "Inconnu")
+    entreprise = offre.get("entreprise", "Inconnue")
+    print(f"\n[JOB] Traitement Glassdoor : {titre} @ {entreprise}")
+    print(f"   URL : {url}")
+
+    if not str(url).startswith("glassdoor://"):
+        print("  [SKIP] Offre ignoree: mode Glassdoor card-only (aucune navigation URL directe)")
+        log_candidature(url, titre, entreprise, "ignoree", "url directe interdite en mode card-only")
+        return False
+
+    ok_card = _selectionner_carte_glassdoor(page, offre)
+    if not ok_card:
+        print("  [SKIP] Carte Glassdoor introuvable dans la liste")
+        log_candidature(url, titre, entreprise, "ignoree", "carte introuvable")
+        return False
+    time.sleep(1.2)
+
+    easy_apply = None
+    for sel in [
+        'button:has-text("Candidature facile")',
+        'button:has-text("Easy Apply")',
+        'a:has-text("Candidature facile")',
+        'a:has-text("Easy Apply")',
+        '[data-test*="easyApply"]',
+    ]:
+        try:
+            el = page.query_selector(sel)
+            if el and el.is_visible():
+                easy_apply = el
+                break
+        except Exception:
+            continue
+
+    if not easy_apply:
+        print("  [SKIP] Bouton Easy Apply introuvable")
+        log_candidature(url, titre, entreprise, "ignoree", "easy apply introuvable")
+        return False
+
+    pages_avant = set(page.context.pages)
+    try:
+        easy_apply.click()
+    except Exception:
+        try:
+            easy_apply.click(force=True)
+        except Exception:
+            pass
+    time.sleep(2)
+
+    cible = attendre_nouvelle_page(page.context, pages_avant, timeout_ms=12000)
+    if cible is None:
+        if "smartapply.indeed.com" in (page.url or "").lower():
+            cible = page
+        else:
+            print("  [SKIP] Redirection SmartApply non detectee")
+            log_candidature(url, titre, entreprise, "ignoree", "smartapply non detecte")
+            return False
+
+    # La tab peut commencer en about:blank avant de basculer vers SmartApply.
+    final_url = ""
+    for _ in range(20):
+        try:
+            cible.wait_for_load_state("domcontentloaded", timeout=1500)
+        except Exception:
+            pass
+        final_url = (cible.url or "")
+        if _url_est_smartapply(final_url):
+            break
+        if final_url and final_url.lower() != "about:blank":
+            # peut encore rediriger ensuite, on attend un peu
+            time.sleep(0.8)
+        else:
+            time.sleep(0.8)
+
+    if not _url_est_smartapply(final_url):
+        print(f"  [SKIP] URL cible non supportee: {final_url[:90]}")
+        log_candidature(url, titre, entreprise, "ignoree", "ats non supporte")
+        return False
+
+    # SmartApply: pas d'upload CV (deja present), mais questions dynamiques possibles.
+    confirme = False
+    for _ in range(8):
+        remplir_infos_contact_sans_cv(cible)
+        gerer_questions_supplementaires(cible, cv_texte, offre, form_scope="", langue=langue)
+
+        action = cliquer_bouton_smartapply(cible)
+        if not action:
+            break
+        time.sleep(2)
+
+        try:
+            cible.wait_for_selector(
+                ':has-text("application submitted"), :has-text("thank you"), :has-text("candidature a ete envoyee"), [class*="success"]',
+                timeout=2500,
+            )
+            confirme = True
+            break
+        except Exception:
+            continue
+
+    if not confirme:
+        print("  [SKIP] Soumission SmartApply non confirmee")
+        log_candidature(url, titre, entreprise, "ignoree", "soumission smartapply non confirmee")
+        return False
+
+    print("  [OK] Candidature Glassdoor envoyee (confirmation detectee)")
+    log_candidature(url, titre, entreprise, "envoyee")
+    return True
+
+
+def postuler_offre_hellowork(page, offre: dict, cv_texte: str, langue: str = "fr") -> bool:
+    """Postule a une offre Hellowork via le formulaire interne."""
+    url = offre["url"]
+    titre = offre.get("titre", "Inconnu")
+    entreprise = offre.get("entreprise", "Inconnue")
+    print(f"\n[JOB] Traitement Hellowork : {titre} @ {entreprise}")
+    print(f"   URL : {url}")
+
+    page.goto(url, wait_until="domcontentloaded")
+    time.sleep(2)
+    accepter_cookies(page)
+
+    # Faire défiler ou cliquer sur "Postuler" pour charger le formulaire lazy (turbo-frame)
+    try:
+        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        time.sleep(1)
+        btn_postuler_scroll = page.query_selector('a[href="#postuler"], #mobile-sticky-button')
+        if btn_postuler_scroll and btn_postuler_scroll.is_visible():
+            btn_postuler_scroll.click()
+            time.sleep(2)
+        else:
+            # Essayer de trouver juste un bouton postuler qui ne soumet pas de formulaire
+            for sel in ['button.tw-btn-primary-candidacy-l', 'a.tw-btn-primary-candidacy-l']:
+                btn = page.query_selector(sel)
+                if btn and btn.is_visible():
+                    btn.click()
+                    time.sleep(2)
+                    break
+
+        # Attendre que le formulaire se charge ou apparaisse
+        page.wait_for_selector('form#offer-detail-main-step-form, #Answer_MotivationLetter_Funnel', timeout=4000)
+    except Exception:
+        pass
+
+    bouton_externe = None
+    for sel in [
+        'a:has-text("Postuler sur le site du recruteur")',
+        'button:has-text("Postuler sur le site du recruteur")',
+    ]:
+        try:
+            el = page.query_selector(sel)
+            if el and el.is_visible():
+                bouton_externe = el
+                break
+        except Exception:
+            continue
+
+    if bouton_externe:
+        print("  [SKIP] Candidature externe (site du recruteur)")
+        log_candidature(url, titre, entreprise, "ignoree", "site recruteur externe")
+        return False
+
+    lettre = generer_lettre_motivation(cv_texte, offre, langue=langue)
+
+    bouton_message = None
+    for sel in [
+        '[data-cy="motivationFieldButton"]',
+        'label:has-text("Personnaliser mon message au recruteur")',
+    ]:
+        try:
+            el = page.query_selector(sel)
+            if el and el.is_visible():
+                bouton_message = el
+                break
+        except Exception:
+            continue
+    if bouton_message:
+        try:
+            bouton_message.click()
+            time.sleep(0.6)
+        except Exception:
+            pass
+
+    zone_message = None
+    for sel in [
+        '#Answer_MotivationLetter_Funnel',
+        'textarea[name="MotivationLetter"]',
+    ]:
+        try:
+            el = page.query_selector(sel)
+            if el and el.is_visible():
+                zone_message = el
+                break
+        except Exception:
+            continue
+
+    if not zone_message:
+        print("  [SKIP] Zone de message recruteur introuvable")
+        log_candidature(url, titre, entreprise, "ignoree", "champ motivation introuvable")
+        return False
+
+    try:
+        zone_message.fill(lettre[:3000])
+    except Exception:
+        print("  [SKIP] Impossible de remplir le message recruteur")
+        log_candidature(url, titre, entreprise, "ignoree", "remplissage motivation impossible")
+        return False
+
+    bouton_postuler = None
+    for sel in [
+        'button[data-cy="submitButton"]',
+        'button[type="submit"]:has-text("Postuler")',
+        'button:has-text("Postuler")',
+    ]:
+        try:
+            el = page.query_selector(sel)
+            if el and el.is_visible():
+                bouton_postuler = el
+                break
+        except Exception:
+            continue
+
+    if not bouton_postuler:
+        print("  [SKIP] Bouton Postuler introuvable")
+        log_candidature(url, titre, entreprise, "ignoree", "bouton postuler introuvable")
+        return False
+
+    try:
+        bouton_postuler.click()
+        time.sleep(2.5)
+    except Exception:
+        print("  [SKIP] Echec clic sur Postuler")
+        log_candidature(url, titre, entreprise, "ignoree", "clic postuler echoue")
+        return False
+
+    try:
+        page.wait_for_selector(
+            ':has-text("candidature"), :has-text("envoyee"), :has-text("envoyée"), :has-text("merci"), [class*="success"]',
+            timeout=5000,
+        )
+    except Exception:
+        pass
+
+    print("  [OK] Candidature Hellowork soumise")
+    log_candidature(url, titre, entreprise, "envoyee")
+    return True
+
+
 def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str = "fr") -> bool:
     """
     Tente de postuler Ã  une offre.
@@ -1522,8 +2405,8 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Bot de candidature automatique - WTTJ / VIE")
-    parser.add_argument("url", help="URL de recherche (WTTJ ou VIE)")
+    parser = argparse.ArgumentParser(description="Bot de candidature automatique - WTTJ / Glassdoor / Hellowork / VIE")
+    parser.add_argument("url", help="URL de recherche (WTTJ, Glassdoor, Hellowork ou VIE)")
     parser.add_argument(
         "--max", type=int, default=None,
         help="Nombre max d'offres Ã  traiter (ex: --max 5). Surcharge MAX_OFFRES depuis .env"
@@ -1532,13 +2415,22 @@ def main():
         "--max-pages", type=int, default=None,
         help="Nombre max de pages Ã  scraper (ex: --max-pages 3). Surcharge MAX_PAGES depuis .env"
     )
+    parser.add_argument(
+        "--test-letter", action="store_true",
+        help="Mode test: scrape une offre unique et genere uniquement la lettre (sans login/soumission)."
+    )
     args = parser.parse_args()
 
     url_recherche = args.url
     plateforme = detecter_plateforme(url_recherche)
     if plateforme == "inconnue":
         print("\n❌ Plateforme non supportée.")
-        print("   URL attendue: welcometothejungle.com ou mon-vie-via.businessfrance.fr")
+        print("   URL attendue: welcometothejungle.com, glassdoor.*, hellowork.com ou mon-vie-via.businessfrance.fr")
+        sys.exit(1)
+
+    if args.test_letter and not est_url_offre_directe(url_recherche):
+        print("\n❌ --test-letter attend une URL d'offre directe (pas une page de recherche).")
+        print("   Exemple: https://www.welcometothejungle.com/fr/companies/.../jobs/...")
         sys.exit(1)
 
     # Priorite : argument CLI > variables chargees depuis .env
@@ -1564,7 +2456,7 @@ def main():
         print("   Obtiens-la sur https://console.mistral.ai/")
         sys.exit(1)
     
-    if plateforme == "wttj":
+    if plateforme == "wttj" and not args.test_letter:
         manual_login = getattr(config, "WTTJ_MANUAL_LOGIN", False)
         if not manual_login and (not config.WTTJ_EMAIL or not config.WTTJ_PASSWORD):
             print("\nWTTJ_EMAIL / WTTJ_PASSWORD manquants dans .env")
@@ -1578,8 +2470,8 @@ def main():
     print(f"   Max pages   : {max_pages or 'toutes'} (source: {source_max_pages})")
     print(f"   Navigateur  : {'visible' if config.SHOW_BROWSER else 'headless (invisible)'}")
 
-    if plateforme == "vie" and not config.SHOW_BROWSER:
-        print("\n❌ Pour VIE, SHOW_BROWSER doit etre True (connexion manuelle requise).")
+    if plateforme in {"vie", "glassdoor", "hellowork"} and not config.SHOW_BROWSER:
+        print(f"\n❌ Pour {plateforme.upper()}, SHOW_BROWSER doit etre True (connexion manuelle requise).")
         sys.exit(1)
     
     with sync_playwright() as p:
@@ -1604,17 +2496,40 @@ def main():
         """)
         
         try:
+            if args.test_letter:
+                print("\n[TEST] Mode generation lettre uniquement")
+                offre = extraire_details_offre(page, url_recherche)
+                langue_offre = detecter_langue_offre(offre)
+                offre["langue"] = langue_offre
+                print(f"  [JOB] {offre.get('titre', '?')} @ {offre.get('entreprise', '?')}")
+                print(f"  [LANG] {'anglais' if langue_offre == 'en' else 'francais'}")
+
+                lettre = generer_lettre_motivation(cv_texte, offre, langue=langue_offre)
+                lettre_path = creer_fichier_temp_lettre(lettre, offre)
+                print(f"\n[OK] Lettre generee ({len(lettre)} caracteres)")
+                print(f"[OK] Fichier: {lettre_path}\n")
+                print(lettre)
+                return
+
             if plateforme == "wttj":
                 # â”€â”€ Login â”€â”€
                 se_connecter_wttj(page, context)
-            elif getattr(config, "VIE_MANUAL_LOGIN", True):
+            elif plateforme == "vie" and getattr(config, "VIE_MANUAL_LOGIN", True):
                 se_connecter_vie(page)
+            elif plateforme == "glassdoor":
+                se_connecter_glassdoor(page)
+            elif plateforme == "hellowork":
+                se_connecter_hellowork(page)
 
             # â”€â”€ Ã‰tape 1 : Collecter les offres â”€â”€
             # IMPORTANT: on ne limite pas ici par max_offres, sinon les offres ignorees
             # consomment le stock collecte et on n'atteint pas l'objectif d'envois.
             if plateforme == "wttj":
                 offres = recuperer_toutes_offres(page, url_recherche, max_offres=None, max_pages=max_pages)
+            elif plateforme == "glassdoor":
+                offres = recuperer_toutes_offres_glassdoor(page, url_recherche, max_offres=None, max_pages=max_pages)
+            elif plateforme == "hellowork":
+                offres = recuperer_toutes_offres_hellowork(page, url_recherche, max_offres=None, max_pages=max_pages)
             else:
                 offres = recuperer_toutes_offres_vie(page, url_recherche, max_offres=None, max_pages=max_pages)
             
@@ -1648,7 +2563,14 @@ def main():
                 
                 try:
                     # RÃ©cupÃ©rer les dÃ©tails de l'offre
-                    offre = extraire_details_offre(page, url)
+                    if plateforme == "glassdoor":
+                        # Sur Glassdoor, on postule carte par carte sans naviguer sur chaque URL
+                        # pour eviter de casser le contexte de recherche.
+                        offre = dict(offre_base)
+                        offre.setdefault("description", "")
+                        offre.setdefault("titre_url", extraire_titre_depuis_url_offre(url))
+                    else:
+                        offre = extraire_details_offre(page, url)
                     langue_offre = detecter_langue_offre(offre)
                     offre["langue"] = langue_offre
                     print(f"  [LANG] Langue detectee: {'anglais' if langue_offre == 'en' else 'francais'}")
@@ -1656,6 +2578,10 @@ def main():
                     # Postuler
                     if plateforme == "wttj":
                         succes = postuler_offre(page, offre, cv_texte, cv_path_abs, langue=langue_offre)
+                    elif plateforme == "glassdoor":
+                        succes = postuler_offre_glassdoor(page, offre, cv_texte, langue=langue_offre)
+                    elif plateforme == "hellowork":
+                        succes = postuler_offre_hellowork(page, offre, cv_texte, langue=langue_offre)
                     else:
                         succes = postuler_offre_vie(page, offre, cv_texte, cv_path_abs, langue=langue_offre)
                     
