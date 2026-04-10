@@ -1,14 +1,14 @@
 """
-ðŸ¤– Welcome to the Jungle - Bot de candidature automatique
+[BOT] Welcome to the Jungle - Bot de candidature automatique
 =========================================================
 Utilisation :
     python main.py "https://www.welcometothejungle.com/fr/jobs?query=marketing&..."
 
 Le bot va :
-1. RÃ©cupÃ©rer toutes les offres de la recherche (avec pagination)
+1. Recuperer toutes les offres de la recherche (avec pagination)
 2. Pour chaque offre, cliquer sur Apply
-3. Si Ã§a ouvre une popup WTTJ â†’ remplir le formulaire + lettre perso gÃ©nÃ©rÃ©e par Claude
-4. Si Ã§a redirige ailleurs â†’ ignorer l'offre
+3. Si ca ouvre une popup WTTJ -> remplir le formulaire + lettre perso generee par l'IA
+4. Si ca redirige ailleurs -> ignorer l'offre
 """
 
 import sys
@@ -116,8 +116,8 @@ def detecter_langue_offre(offre: dict) -> str:
         "engineer", "analyst", "owner", "lead", "sales", "success",
     }
     mots_fr_titre = {
-        "chef", "projet", "charge", "chargé", "responsable", "developpement",
-        "développement", "commercial", "communication", "alternance",
+        "chef", "projet", "charge", "charg?", "responsable", "developpement",
+        "d?veloppement", "commercial", "communication", "alternance",
     }
     score_titre_en = sum(1 for t in tokens_titre if t.lower() in mots_en_titre)
     score_titre_fr = sum(1 for t in tokens_titre if t.lower() in mots_fr_titre)
@@ -131,7 +131,7 @@ def detecter_langue_offre(offre: dict) -> str:
     }
     mots_fr = {
         "le", "la", "les", "et", "avec", "pour", "vous", "nous", "notre",
-        "experience", "expérience", "profil", "poste", "mission", "candidature",
+        "experience", "exp?rience", "profil", "poste", "mission", "candidature",
     }
     score_en = sum(1 for t in tokens if t.lower() in mots_en)
     score_fr = sum(1 for t in tokens if t.lower() in mots_fr)
@@ -141,7 +141,7 @@ def detecter_langue_offre(offre: dict) -> str:
 
 
 def extraire_question_utilisable(label_brut: str) -> str:
-    """Extrait une question courte et exploitable depuis un bloc de texte potentiellement bruité."""
+    """Extrait une question courte et exploitable depuis un bloc de texte potentiellement bruit?."""
     texte = (label_brut or "").strip()
     if not texte:
         return ""
@@ -186,7 +186,7 @@ def detecter_langue_question(question: str, langue_par_defaut: str = "fr") -> st
     }
     marqueurs_fr = {
         "etes-vous", "parlez-vous", "avez-vous", "pouvez-vous", "francais",
-        "expérience", "annees", "années", "salaire", "bureau", "presentiel",
+        "exp?rience", "annees", "ann?es", "salaire", "bureau", "presentiel",
     }
 
     score_en = sum(1 for m in marqueurs_en if m in q)
@@ -247,7 +247,7 @@ def page_demande_connexion_ou_compte(target) -> bool:
         "se connecter",
         "connexion",
         "inscription",
-        "créer un compte",
+        "cr?er un compte",
         "creer un compte",
         "sign in",
         "log in",
@@ -262,12 +262,12 @@ def _navigation_interrompue(err: Exception) -> bool:
     return "interrupted by another navigation" in msg or "net::err_aborted" in msg
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]
 #  SCRAPING DES OFFRES
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]
 
 def accepter_cookies(page):
-    """Accepte la banniÃ¨re de cookies si elle apparaÃ®t."""
+    """Accepte la banni??re de cookies si elle appara??t."""
     selecteurs_cookies = [
         'button:has-text("Accepter")',
         'button:has-text("Tout accepter")',
@@ -283,7 +283,7 @@ def accepter_cookies(page):
             btn = page.wait_for_selector(sel, timeout=3000, state="visible")
             if btn:
                 btn.click()
-                print("  ðŸª Cookies acceptÃ©s")
+                print("  [INFO] Cookies acceptes")
                 time.sleep(1)
                 return
         except Exception:
@@ -391,25 +391,15 @@ def se_connecter_vie(page):
     accepter_cookies(page)
     time.sleep(1)
 
-    print("  [ACTION] Si besoin, connecte-toi manuellement au site VIE dans le navigateur.")
-    print("  [ACTION] Le bot ne fait plus de detection automatique de connexion.")
+    print("  [ACTION] Connecte-toi manuellement au site VIE dans le navigateur.")
+    print("  [ACTION] Une fois connecte, reviens ici et appuie sur Entree.")
 
-    while True:
-        try:
-            rep = input("  Es-tu connecte au portail VIE ? (oui/non): ").strip().lower()
-        except EOFError:
-            rep = "non"
-
-        if rep in {"oui", "o", "yes", "y"}:
-            print("  Connexion VIE confirmee par l'utilisateur")
-            return
-        if rep in {"non", "n", "no"}:
-            try:
-                input("  Connecte-toi puis appuie sur Entree pour repondre a nouveau... ")
-            except EOFError:
-                time.sleep(1)
-            continue
-        print("  Reponse invalide. Tape 'oui' ou 'non'.")
+    try:
+        input("  Appuie sur Entree pour continuer... ")
+    except EOFError:
+        time.sleep(1)
+    
+    print("  Connexion VIE confirmee")
 
 
 def se_connecter_glassdoor(page):
@@ -613,8 +603,8 @@ def activer_filtre_easy_apply_glassdoor(page):
 
 def extraire_cartes_glassdoor(page) -> list[dict]:
     """
-    Extrait les cartes Glassdoor visibles (sans dépendre d'URL d'offre).
-    Retourne des entrées avec id pseudo-stable + titre/entreprise.
+    Extrait les cartes Glassdoor visibles (sans d?pendre d'URL d'offre).
+    Retourne des entr?es avec id pseudo-stable + titre/entreprise.
     """
     cartes = page.evaluate(
         """() => {
@@ -629,7 +619,7 @@ def extraire_cartes_glassdoor(page) -> list[dict]:
                 if (!l) return true;
                 if (bad.some(b => l === b)) return true;
                 if (l.includes('candidature facile') || l.includes('easy apply')) return true;
-                if (/^\\d+[jk]?\\s?€/.test(l) || /\\b(k€|€)\\b/.test(l)) return true;
+                if (/^\\d+[jk]?\\s??/.test(l) || /\\b(k?|?)\\b/.test(l)) return true;
                 if (l.length < 3) return true;
                 return false;
             }
@@ -705,7 +695,7 @@ def _url_est_smartapply(url: str) -> bool:
 
 
 def _construire_url_page(url_recherche: str, page_num: int) -> str:
-    """Construit l'URL de recherche en forçant le paramètre page."""
+    """Construit l'URL de recherche en for?ant le param?tre page."""
     parsed = urlparse(url_recherche)
     query = parse_qs(parsed.query, keep_blank_values=True)
     query["page"] = [str(page_num)]
@@ -714,19 +704,19 @@ def _construire_url_page(url_recherche: str, page_num: int) -> str:
 
 
 def recuperer_toutes_offres(page, url_recherche: str, max_offres=None, max_pages=3) -> list[dict]:
-    """Navigue sur toutes les pages de rÃ©sultats et collecte les offres."""
-    print(f"\nðŸ” RÃ©cupÃ©ration des offres depuis :\n   {url_recherche}\n")
+    """Navigue sur toutes les pages de resultats et collecte les offres."""
+    print(f"\n[SEARCH] Recuperation des offres depuis :\n   {url_recherche}\n")
     toutes_offres = []
     page_num = 1
     urls_vues = set()
 
     while True:
         if max_pages is not None and page_num > max_pages:
-            print(f"  âš‘ï¸  Limite de pages atteinte ({max_pages})")
+            print(f"  [STOP] Limite de pages atteinte ({max_pages})")
             break
 
         url_courante = _construire_url_page(url_recherche, page_num)
-        print(f"  ðŸ“„ Page {page_num}...")
+        print(f"  [LOG] Page {page_num}...")
         page.goto(url_courante, wait_until="domcontentloaded")
         time.sleep(2)
         
@@ -738,13 +728,13 @@ def recuperer_toutes_offres(page, url_recherche: str, max_offres=None, max_pages
         
         offres = extraire_offres_page(page)
         if not offres:
-            print("     â†’ aucune offre sur cette page, arrÃªt de la pagination")
+            print("     [STUFF] aucune offre sur cette page, arret de la pagination")
             break
 
         nouvelles = [o for o in offres if o["url"] not in urls_vues]
         toutes_offres.extend(nouvelles)
         urls_vues.update(o["url"] for o in nouvelles)
-        print(f"     â†’ {len(nouvelles)} nouvelles offres trouvÃ©es (total : {len(toutes_offres)})")
+        print(f"     [STUFF] {len(nouvelles)} nouvelles offres trouvees (total : {len(toutes_offres)})")
 
         if max_offres and len(toutes_offres) >= max_offres:
             toutes_offres = toutes_offres[:max_offres]
@@ -752,7 +742,7 @@ def recuperer_toutes_offres(page, url_recherche: str, max_offres=None, max_pages
 
         page_num += 1
     
-    print(f"\nâœ… Total : {len(toutes_offres)} offres collectÃ©es\n")
+    print(f"\n[OK] Total : {len(toutes_offres)} offres collectees\n")
     return toutes_offres
 
 
@@ -1005,12 +995,12 @@ def recuperer_toutes_offres_hellowork(page, url_recherche: str, max_offres=None,
     return toutes_offres
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]
 #  SCRAPING DES DETAILS D'UNE OFFRE
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]
 
 def extraire_details_offre(page, url: str) -> dict:
-    """Extrait le titre, l'entreprise et la description complÃ¨te d'une offre."""
+    """Extrait le titre, l'entreprise et la description compl??te d'une offre."""
     page.goto(url, wait_until="domcontentloaded")
     time.sleep(2)
     accepter_cookies(page)
@@ -1060,7 +1050,7 @@ def extraire_details_offre(page, url: str) -> dict:
                 offre["entreprise"] = text
                 break
     
-    # Description complÃ¨te
+    # Description compl??te
     desc_parts = []
     for selector in [
         '[data-testid="job-description"]',
@@ -1084,9 +1074,9 @@ def extraire_details_offre(page, url: str) -> dict:
     return offre
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]
 #  REMPLISSAGE DU FORMULAIRE
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]?"[STUFF]
 
 def remplir_champ(target, selector: str, valeur: str, timeout: int = 3000):
     """Remplit un champ de formulaire si il existe."""
@@ -1103,7 +1093,7 @@ def remplir_champ(target, selector: str, valeur: str, timeout: int = 3000):
 
 def extraire_titre_depuis_url_offre(url_offre: str) -> str:
     """
-    Extrait un intitulé de poste depuis le slug URL.
+    Extrait un intitul? de poste depuis le slug URL.
     Exemple:
     /jobs/b2b-marketing-manager-strategie-sectorielle_begles
     -> "marketing manager strategie sectorielle b2b"
@@ -1144,8 +1134,8 @@ def extraire_titre_depuis_url_offre(url_offre: str) -> str:
 
 def normaliser_poste_actuel(offre: dict) -> str:
     """
-    Construit un intitulé propre pour le champ "Poste actuel".
-    Exemple: "B2B Marketing Manager - Stratégie Sectorielle" -> "Marketing Manager B2B"
+    Construit un intitul? propre pour le champ "Poste actuel".
+    Exemple: "B2B Marketing Manager - Strat?gie Sectorielle" -> "Marketing Manager B2B"
     """
     titre = (offre.get("titre_url") or offre.get("titre") or "").strip()
     if not titre:
@@ -1153,12 +1143,12 @@ def normaliser_poste_actuel(offre: dict) -> str:
 
     titre = re.sub(r"\s+", " ", titre).strip().lower()
     titre = re.sub(r"\bmaketing\b", "marketing", titre, flags=re.IGNORECASE)
-    # Retirer les précisions après séparateur (souvent équipe/verticale/localisation)
-    titre = re.split(r"\s[-–|:]\s", titre, maxsplit=1)[0].strip()
-    # Retirer une précision finale entre parenthèses
+    # Retirer les pr?cisions apr?s s?parateur (souvent ?quipe/verticale/localisation)
+    titre = re.split(r"\s[--|:]\s", titre, maxsplit=1)[0].strip()
+    # Retirer une pr?cision finale entre parenth?ses
     titre = re.sub(r"\s*\([^)]*\)\s*$", "", titre).strip()
 
-    # Retirer les marqueurs de population/type de contrat souvent ajoutés au titre
+    # Retirer les marqueurs de population/type de contrat souvent ajout?s au titre
     # Exemples: h/f, f/h, cdi, cdd, stage, alternance...
     titre = re.sub(r"\b[hf]\s*[/\-]\s*[hf]\b", " ", titre, flags=re.IGNORECASE)
     titre = re.sub(r"\bh\s+f\b|\bf\s+h\b", " ", titre, flags=re.IGNORECASE)
@@ -1170,7 +1160,7 @@ def normaliser_poste_actuel(offre: dict) -> str:
     )
     titre = re.sub(r"\s+", " ", titre).strip()
 
-    # Replacer un préfixe business fréquent en suffixe
+    # Replacer un pr?fixe business fr?quent en suffixe
     m = re.match(r"^(B2B|B2C)\s+(.+)$", titre, flags=re.IGNORECASE)
     if m:
         titre = f"{m.group(2).strip()} {m.group(1).upper()}"
@@ -1193,7 +1183,7 @@ def gerer_questions_supplementaires(
     form_scope: str = "",
     langue: str = "fr",
 ):
-    """DÃ©tecte et rÃ©pond aux questions supplÃ©mentaires du formulaire."""
+    """D??tecte et r??pond aux questions suppl??mentaires du formulaire."""
     base = f"{form_scope} " if form_scope else ""
     questions = target.eval_on_selector_all(
         f'{base}input, {base}textarea, {base}select',
@@ -1261,14 +1251,14 @@ def gerer_questions_supplementaires(
     )
 
     for q in questions:
-        if q["value"]:  # DÃ©jÃ  rempli
+        if q["value"]:  # D??j?  rempli
             continue
 
         label = extraire_question_utilisable(q["label"] or q["placeholder"] or q["name"])
         if not label or len(label) < 3:
             continue
 
-        # Ignorer les champs standards dÃ©jÃ  gÃ©rÃ©s
+        # Ignorer les champs standards d??j?  g??r??s
         champs_standards = [
             "nom", "prenom", "email", "telephone", "phone",
             "name", "surname", "first", "last",
@@ -1280,13 +1270,13 @@ def gerer_questions_supplementaires(
         # Ignorer les champs de recherche/filtre hors candidature
         champs_recherche = [
             "que recherchez-vous", "que recherchez vous", "recherchez-vous", "recherchez vous",
-            "recherche", "search", "keyword", "mot-cle", "mot clé", "query", "filtre", "filter",
-            "localisation", "location", "pays", "metier", "métier"
+            "recherche", "search", "keyword", "mot-cle", "mot cl?", "query", "filtre", "filter",
+            "localisation", "location", "pays", "metier", "m?tier"
         ]
         if any(k in label.lower() for k in champs_recherche):
             continue
 
-        print(f"  ðŸ’¬ Question dÃ©tectÃ©e : {label[:80]}")
+        print(f"  [STUFF] Question detectee : {label[:80]}")
 
         type_reponse = detecter_type_reponse_question(label, q["tag"], q["type"])
         langue_question = choisir_langue_reponse_question(label, langue_offre=langue)
@@ -1303,7 +1293,7 @@ def gerer_questions_supplementaires(
             type_reponse=type_reponse,
             langue=langue_question,
         )
-        print(f"     â†’ RÃ©ponse : {reponse[:100]}...")
+        print(f"     [STUFF] Reponse : {reponse[:100]}...")
 
         # Remplir le champ
         try:
@@ -1321,7 +1311,7 @@ def gerer_questions_supplementaires(
 
             if q["tag"] == "select":
                 options = q.get("options", [])
-                # Essayer de matcher la rÃ©ponse IA Ã  une option existante.
+                # Essayer de matcher la r??ponse IA ?  une option existante.
                 selected = False
                 rep = reponse.strip().lower()
                 for opt in options:
@@ -1766,7 +1756,7 @@ def postuler_offre_vie(page, offre: dict, cv_texte: str, cv_path: str, langue: s
     confirmation = False
     try:
         cible.wait_for_selector(
-            ':has-text("Votre candidature a été envoyée"), '
+            ':has-text("Votre candidature a ?t? envoy?e"), '
             ':has-text("candidature a ete envoyee"), '
             ':has-text("application submitted"), '
             ':has-text("thank you"), :has-text("merci"), '
@@ -1965,7 +1955,7 @@ def postuler_offre_glassdoor(page, offre: dict, cv_texte: str, langue: str = "fr
     return True
 
 
-def postuler_offre_hellowork(page, offre: dict, cv_texte: str, langue: str = "fr") -> bool:
+def postuler_offre_hellowork(page, offre: dict, cv_texte: str, langue: str = "fr", skip_letter: bool = False) -> bool:
     """Postule a une offre Hellowork via le formulaire interne."""
     url = offre["url"]
     titre = offre.get("titre", "Inconnu")
@@ -1977,7 +1967,7 @@ def postuler_offre_hellowork(page, offre: dict, cv_texte: str, langue: str = "fr
     time.sleep(2)
     accepter_cookies(page)
 
-    # Faire défiler ou cliquer sur "Postuler" pour charger le formulaire lazy (turbo-frame)
+    # Faire de?filer ou cliquer sur "Postuler" pour charger le formulaire lazy (turbo-frame)
     try:
         page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(1)
@@ -2017,51 +2007,51 @@ def postuler_offre_hellowork(page, offre: dict, cv_texte: str, langue: str = "fr
         log_candidature(url, titre, entreprise, "ignoree", "site recruteur externe")
         return False
 
-    lettre = generer_lettre_motivation(cv_texte, offre, langue=langue)
+    if skip_letter:
+        print("  [INFO] Option --skip-letter activee. On tente de postuler sans message.")
+    else:
+        lettre = generer_lettre_motivation(cv_texte, offre, langue=langue)
 
-    bouton_message = None
-    for sel in [
-        '[data-cy="motivationFieldButton"]',
-        'label:has-text("Personnaliser mon message au recruteur")',
-    ]:
-        try:
-            el = page.query_selector(sel)
-            if el and el.is_visible():
-                bouton_message = el
-                break
-        except Exception:
-            continue
-    if bouton_message:
-        try:
-            bouton_message.click()
-            time.sleep(0.6)
-        except Exception:
+        bouton_message = None
+        for sel in [
+            '[data-cy="motivationFieldButton"]',
+            'label:has-text("Personnaliser mon message au recruteur")',
+        ]:
+            try:
+                el = page.query_selector(sel)
+                if el and el.is_visible():
+                    bouton_message = el
+                    break
+            except Exception:
+                continue
+        if bouton_message:
+            try:
+                bouton_message.click()
+                time.sleep(0.6)
+            except Exception:
+                pass
+
+        zone_message = None
+        for sel in [
+            '#Answer_MotivationLetter_Funnel',
+            'textarea[name="MotivationLetter"]',
+        ]:
+            try:
+                el = page.query_selector(sel)
+                if el and el.is_visible():
+                    zone_message = el
+                    break
+            except Exception:
+                continue
+
+        if not zone_message:
+            # Si on ne trouve pas la zone apress avoir clique, c'est peut-etre deja rempli ou optionnel.
             pass
-
-    zone_message = None
-    for sel in [
-        '#Answer_MotivationLetter_Funnel',
-        'textarea[name="MotivationLetter"]',
-    ]:
-        try:
-            el = page.query_selector(sel)
-            if el and el.is_visible():
-                zone_message = el
-                break
-        except Exception:
-            continue
-
-    if not zone_message:
-        print("  [SKIP] Zone de message recruteur introuvable")
-        log_candidature(url, titre, entreprise, "ignoree", "champ motivation introuvable")
-        return False
-
-    try:
-        zone_message.fill(lettre[:3000])
-    except Exception:
-        print("  [SKIP] Impossible de remplir le message recruteur")
-        log_candidature(url, titre, entreprise, "ignoree", "remplissage motivation impossible")
-        return False
+        else:
+            try:
+                zone_message.fill(lettre[:3000])
+            except Exception:
+                print("  [WARN] Impossible de remplir le message recruteur (continuons)")
 
     bouton_postuler = None
     for sel in [
@@ -2092,7 +2082,7 @@ def postuler_offre_hellowork(page, offre: dict, cv_texte: str, langue: str = "fr
 
     try:
         page.wait_for_selector(
-            ':has-text("candidature"), :has-text("envoyee"), :has-text("envoyée"), :has-text("merci"), [class*="success"]',
+            ':has-text("candidature"), :has-text("envoyee"), :has-text("envoy?e"), :has-text("merci"), [class*="success"]',
             timeout=5000,
         )
     except Exception:
@@ -2103,19 +2093,19 @@ def postuler_offre_hellowork(page, offre: dict, cv_texte: str, langue: str = "fr
     return True
 
 
-def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str = "fr") -> bool:
+def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str = "fr", skip_letter: bool = False) -> bool:
     """
-    Tente de postuler Ã  une offre.
-    Retourne True si candidature envoyÃ©e, False sinon.
+    Tente de postuler ?  une offre.
+    Retourne True si candidature envoy??e, False sinon.
     """
     url = offre["url"]
     titre = offre.get("titre", "Inconnu")
     entreprise = offre.get("entreprise", "Inconnue")
     
-    print(f"\nðŸ“‹ Traitement : {titre} @ {entreprise}")
+    print(f"\n[STUFF] Traitement : {titre} @ {entreprise}")
     print(f"   URL : {url}")
     
-    # â”€â”€ 1. Trouver et cliquer sur le bouton Apply â”€â”€
+    # ?"[STUFF] 1. Trouver et cliquer sur le bouton Apply ?"[STUFF]
     bouton_apply = None
     selecteurs_apply = [
         'button:has-text("Postuler")',
@@ -2138,14 +2128,14 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
             continue
     
     if not bouton_apply:
-        print("  âš ï¸  Bouton Apply introuvable")
+        print("  [INFO] [INFO]?  Bouton Apply introuvable")
         log_candidature(url, titre, entreprise, "ignoree", "bouton apply introuvable")
         return False
     
-    # â”€â”€ 2. Cliquer sur Apply et dÃ©tecter ce qui se passe â”€â”€
+    # ?"[STUFF] 2. Cliquer sur Apply et d??tecter ce qui se passe ?"[STUFF]
     url_avant = page.url
     
-    # On Ã©coute si un nouvel onglet s'ouvre (= redirection externe)
+    # On ??coute si un nouvel onglet s'ouvre (= redirection externe)
     nouvelle_page_externe = None
     def on_new_page(p):
         nonlocal nouvelle_page_externe
@@ -2156,27 +2146,27 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
         bouton_apply.click()
     except Exception:
         pass
-    time.sleep(3)  # Laisser le temps Ã  la popup ou redirection de s'ouvrir
+    time.sleep(3)  # Laisser le temps ?  la popup ou redirection de s'ouvrir
     
-    # Cas 1 : un nouvel onglet s'est ouvert â†’ redirection externe
+    # Cas 1 : un nouvel onglet s'est ouvert [STUFF] redirection externe
     if nouvelle_page_externe is not None:
         try:
             nouvelle_page_externe.close()
         except Exception:
             pass
-        print(f"  â†—ï¸  Redirection externe (nouvel onglet) â†’ ignorÃ©")
+        print(f"  [INFO]-[INFO]?  Redirection externe (nouvel onglet) [STUFF] ignor[INFO]")
         log_candidature(url, titre, entreprise, "ignoree", "redirection externe")
         return False
     
-    # Cas 2 : on a Ã©tÃ© redirigÃ© sur une autre page dans le mÃªme onglet
+    # Cas 2 : on a ??t?? redirig?? sur une autre page dans le m??me onglet
     if page.url != url_avant and "welcometothejungle" not in page.url:
-        print(f"  â†—ï¸  Redirection externe ({page.url[:60]}) â†’ ignorÃ©")
+        print(f"  [INFO]-[INFO]?  Redirection externe ({page.url[:60]}) [STUFF] ignor[INFO]")
         log_candidature(url, titre, entreprise, "ignoree", "redirection externe")
         page.go_back()
         time.sleep(2)
         return False
     
-    # â”€â”€ 3. VÃ©rifier que la popup WTTJ s'est ouverte â”€â”€
+    # ?"[STUFF] 3. V??rifier que la popup WTTJ s'est ouverte ?"[STUFF]
     popup_selectors = [
         '[data-testid="apply-form-modal"]',
         'form:has([data-testid="apply-form-submit"])',
@@ -2192,11 +2182,11 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
             continue
     
     if not popup:
-        print("  âš ï¸  Aucune popup dÃ©tectÃ©e aprÃ¨s clic Apply â†’ ignorÃ©")
-        log_candidature(url, titre, entreprise, "ignoree", "popup non dÃ©tectÃ©e")
+        print("  [INFO] [INFO]?  Aucune popup detectee apres clic Apply [STUFF] ignor[INFO]")
+        log_candidature(url, titre, entreprise, "ignoree", "popup non detectee")
         return False
     
-    print("  âœ… Popup WTTJ dÃ©tectÃ©e !")
+    print("  [OK] Popup WTTJ detectee !")
     time.sleep(1)
 
     # Le formulaire est parfois dans un iframe, mais toujours dans apply-form-modal.
@@ -2209,14 +2199,14 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
             has_modal = fr.query_selector(form_scope)
             if has_modal:
                 form_target = fr
-                print("  ðŸ§© Formulaire detecte dans un iframe")
+                print("  [FORM] Formulaire detecte dans un iframe")
                 break
     except Exception:
         pass
     
-    # â”€â”€ 4. Remplir le formulaire â”€â”€
+    # ?"[STUFF] 4. Remplir le formulaire ?"[STUFF]
     
-    # PrÃ©nom
+    # Pr??nom
     for sel in [
         f'{form_scope} [data-testid="apply-form-field-firstname"]',
         f'{form_scope} input[name="firstname"]',
@@ -2247,7 +2237,7 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
         if remplir_champ(form_target, sel, config.EMAIL):
             break
     
-    # TÃ©lÃ©phone
+    # T??l??phone
     for sel in [
         f'{form_scope} [data-testid="apply-form-field-phone"]',
         f'{form_scope} input[name="phone"]',
@@ -2287,7 +2277,7 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
         ]:
             remplir_champ(form_target, sel, config.PORTFOLIO)
     
-    # â”€â”€ 5. Upload du CV â”€â”€
+    # ?"[STUFF] 5. Upload du CV ?"[STUFF]
     cv_upload = None
     for sel in [
         f'{form_scope} [data-testid="apply-form-field-resume"]',
@@ -2299,13 +2289,13 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
             break
     if cv_upload:
         cv_upload.set_input_files(cv_path)
-        print("  ðŸ“Ž CV uploadÃ©")
+        print("  [STUFF] CV upload[INFO]")
         time.sleep(1)
     
-    # â”€â”€ 6. Lettre de motivation â”€â”€
-    print("  âœï¸  GÃ©nÃ©ration de la lettre de motivation...")
+    # ?"[STUFF] 6. Lettre de motivation ?"[STUFF]
+    print("  [INFO][INFO][INFO]  G[INFO]n[INFO]ration de la lettre de motivation...")
     lettre = generer_lettre_motivation(cv_texte, offre, langue=langue)
-    print(f"  ðŸ“ Lettre gÃ©nÃ©rÃ©e ({len(lettre)} caractÃ¨res)")
+    print(f"  [STUFF] Lettre g[INFO]n[INFO]r[INFO]e ({len(lettre)} caract[INFO]res)")
     
     # Chercher le champ de lettre de motivation
     champs_lettre = [
@@ -2327,15 +2317,15 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
                 el.click()
                 el.fill(lettre)
                 lettre_remplie = True
-                print("  âœ‰ï¸  Lettre de motivation remplie")
+                print("  [INFO][INFO][INFO]  Lettre de motivation remplie")
                 break
         except Exception:
             continue
     
     if not lettre_remplie:
-        print("  âš ï¸  Champ lettre de motivation non trouvÃ©")
+        print("  [INFO] [INFO]?  Champ lettre de motivation non trouv[INFO]")
     
-    # â”€â”€ 7. Questions supplÃ©mentaires â”€â”€
+    # ?"[STUFF] 7. Questions suppl??mentaires ?"[STUFF]
     time.sleep(1)
     gerer_questions_supplementaires(form_target, cv_texte, offre, form_scope=form_scope, langue=langue)
 
@@ -2344,16 +2334,15 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
         consent = form_target.query_selector(f'{form_scope} [data-testid="apply-form-consent"]')
         if consent and not consent.is_checked():
             consent.check()
-            print("  âœ… Consentement coche")
+            print("  [OK] Consentement coche")
     except Exception:
         pass
     
-    # â”€â”€ 8. Soumettre â”€â”€
+    # ?"[STUFF] 8. Soumettre ?"[STUFF]
     time.sleep(1)
     boutons_submit = [
         f'{form_scope} [data-testid="apply-form-submit"]',
         f'{form_scope} button[type="submit"]',
-        f'{form_scope} button:has-text("J’envoie ma candidature")',
         f'{form_scope} button:has-text("J\'envoie ma candidature")',
         f'{form_scope} button:has-text("Envoyer")',
         f'{form_scope} button:has-text("Soumettre")',
@@ -2370,66 +2359,86 @@ def postuler_offre(page, offre: dict, cv_texte: str, cv_path: str, langue: str =
             if btn:
                 btn.click()
                 soumis = True
-                print("  ðŸš€ Formulaire soumis !")
+                print("  [START] Formulaire soumis !")
                 time.sleep(3)
                 break
         except Exception:
             continue
     
     if not soumis:
-        print("  âš ï¸  Bouton de soumission non trouvÃ© - candidature non envoyÃ©e")
-        log_candidature(url, titre, entreprise, "erreur", "bouton submit non trouvÃ©")
+        print("  [INFO] [INFO]?  Bouton de soumission non trouv[INFO] - candidature non envoy[INFO]e")
+        log_candidature(url, titre, entreprise, "erreur", "bouton submit non trouv??")
         return False
     
-    # â”€â”€ 9. VÃ©rifier la confirmation â”€â”€
+    # ?"[STUFF] 9. V??rifier la confirmation ?"[STUFF]
     try:
         page.wait_for_selector(
-            ':has-text("Votre candidature a été envoyée"), '
+            ':has-text("Votre candidature a ?t? envoy?e"), '
             ':has-text("candidature a ete envoyee"), '
             ':has-text("merci"), :has-text("thank you"), '
-            ':has-text("envoyée"), :has-text("envoyee"), '
+            ':has-text("envoy?e"), :has-text("envoyee"), '
             '[class*="success"]',
             timeout=7000
         )
-        print("  🎉 Confirmation de candidature recue !")
+        print("  ? Confirmation de candidature recue !")
     except Exception:
-        print("  ℹ️  Pas de confirmation visible (peut etre normal)")
+        print("  [INFO]  Pas de confirmation visible (peut etre normal)")
     
     log_candidature(url, titre, entreprise, "envoyee")
     return True
 
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-#  POINT D'ENTRÃ‰E PRINCIPAL
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# --------------------------------------------------
+#  POINT D'ENTREE PRINCIPAL
+# --------------------------------------------------
 
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Bot de candidature automatique - WTTJ / Glassdoor / Hellowork / VIE")
-    parser.add_argument("url", help="URL de recherche (WTTJ, Glassdoor, Hellowork ou VIE)")
+    parser.add_argument("url_pos", nargs="?", help="URL de recherche (positionnel)")
+    parser.add_argument("-u", "--url", help="URL de recherche (alternative au positionnel)")
     parser.add_argument(
         "--max", type=int, default=None,
-        help="Nombre max d'offres Ã  traiter (ex: --max 5). Surcharge MAX_OFFRES depuis .env"
+        help="Nombre max d'offres a traiter (ex: --max 5). Surcharge MAX_OFFRES depuis .env"
     )
     parser.add_argument(
         "--max-pages", type=int, default=None,
-        help="Nombre max de pages Ã  scraper (ex: --max-pages 3). Surcharge MAX_PAGES depuis .env"
+        help="Nombre max de pages ?  scraper (ex: --max-pages 3). Surcharge MAX_PAGES depuis .env"
+    )
+    parser.add_argument(
+        "--cv-mode", type=str, default=None,
+        choices=["direct", "pptx", "html"],
+        help="Mode de CV: direct (PDF tel quel), pptx (modifie template) ou html."
+    )
+    parser.add_argument(
+        "--llm", type=str, default=None,
+        choices=["mistral", "openai"],
+        help="LLM primaire a utiliser (Mistral ou OpenAI)."
     )
     parser.add_argument(
         "--test-letter", action="store_true",
-        help="Mode test: scrape une offre unique et genere uniquement la lettre (sans login/soumission)."
+        help="Mode test : genere uniquement la lettre pour une offre directe."
+    )
+    parser.add_argument(
+        "--skip-letter", action="store_true",
+        help="Ne pas generer de lettre si elle n'est pas obligatoire (ex: Hellowork)."
     )
     args = parser.parse_args()
 
-    url_recherche = args.url
+    url_recherche = args.url or args.url_pos
+    if not url_recherche:
+        parser.print_help()
+        print("\n[ERROR] L'URL de recherche est requise (soit en positionnel, soit via --url)")
+        sys.exit(1)
+
     plateforme = detecter_plateforme(url_recherche)
     if plateforme == "inconnue":
-        print("\n❌ Plateforme non supportée.")
+        print("\n[ERROR] Plateforme non supportee.")
         print("   URL attendue: welcometothejungle.com, glassdoor.*, hellowork.com ou mon-vie-via.businessfrance.fr")
         sys.exit(1)
 
     if args.test_letter and not est_url_offre_directe(url_recherche):
-        print("\n❌ --test-letter attend une URL d'offre directe (pas une page de recherche).")
+        print("\n[ERROR] --test-letter attend une URL d'offre directe (pas une page de recherche).")
         print("   Exemple: https://www.welcometothejungle.com/fr/companies/.../jobs/...")
         sys.exit(1)
 
@@ -2439,19 +2448,39 @@ def main():
     source_max_offres = "CLI (--max)" if args.max is not None else ".env"
     source_max_pages = "CLI (--max-pages)" if args.max_pages is not None else ".env"
     
-    # VÃ©rification du CV
-    print("ðŸ“„ Lecture du CV...")
+    # Verification du CV
+    print("[INFO] Lecture du CV...")
     try:
         cv_texte = lire_cv(config.CV_PATH)
         cv_path_abs = os.path.abspath(config.CV_PATH)
-        print(f"   âœ… CV lu : {len(cv_texte)} caractÃ¨res")
+        print(f"   [OK] CV lu : {len(cv_texte)} caracteres")
     except (FileNotFoundError, ImportError, ValueError) as e:
-        print(f"\nâŒ Erreur CV : {e}")
+        print(f"\n[ERROR] Erreur CV : {e}")
         sys.exit(1)
+
+    # --- Gestion du Mode de CV et Mod?le IA ---
+    cv_mode = args.cv_mode if args.cv_mode else getattr(config, "CV_MODE", "direct")
+    llm_choice = args.llm if args.llm else getattr(config, "PRIMARY_LLM", "mistral")
     
-    # VÃ©rification de la clÃ© API Mistral
+    pptx_path = None
+    if cv_mode == "pptx":
+        pptx_path = config.CV_PATH_PPTX
+        if not os.path.exists(pptx_path):
+            print(f"  [WARN] Template PPTX introuvable : {pptx_path}. Fallback mode direct.")
+            cv_mode = "direct"
+            pptx_path = None
+        else:
+            try:
+                import comtypes.client
+                import pptx
+            except ImportError:
+                print("  [WARN] Modules python-pptx/comtypes manquants. Fallback mode direct.")
+                cv_mode = "direct"
+                pptx_path = None
+    
+    # V??rification de la cl?? API Mistral
     if not config.MISTRAL_API_KEY or "XXXXX" in config.MISTRAL_API_KEY:
-        print("\nâŒ ClÃ© API Mistral non configurÃ©e !")
+        print("\n[INFO]? Cl[INFO] API Mistral non configur[INFO]e !")
         print("   Ajoute MISTRAL_API_KEY dans ton fichier .env.")
         print("   Obtiens-la sur https://console.mistral.ai/")
         sys.exit(1)
@@ -2463,15 +2492,16 @@ def main():
             print("Active WTTJ_MANUAL_LOGIN=true pour te connecter manuellement.")
             sys.exit(1)
 
-    print(f"\nðŸ¤– DÃ©marrage du bot ({plateforme.upper()})")
+    print(f"\n[INFO] - Demarrage du bot ({plateforme.upper()})")
     print(f"   Candidat    : {config.PRENOM} {config.NOM} ({config.EMAIL})")
-    print(f"   ModÃ¨le IA   : {config.MISTRAL_MODEL}")
+    print(f"   Modele IA   : {llm_choice.upper()} (Logic: {config.MISTRAL_MODEL if llm_choice=='mistral' else config.OPENAI_MODEL})")
+    print(f"   Mode CV     : {cv_mode.upper()}")
     print(f"   Max offres  : {max_offres or 'toutes'} (source: {source_max_offres})")
     print(f"   Max pages   : {max_pages or 'toutes'} (source: {source_max_pages})")
     print(f"   Navigateur  : {'visible' if config.SHOW_BROWSER else 'headless (invisible)'}")
 
     if plateforme in {"vie", "glassdoor", "hellowork"} and not config.SHOW_BROWSER:
-        print(f"\n❌ Pour {plateforme.upper()}, SHOW_BROWSER doit etre True (connexion manuelle requise).")
+        print(f"\n[ERROR] Pour {plateforme.upper()}, SHOW_BROWSER doit etre True (connexion manuelle requise).")
         sys.exit(1)
     
     with sync_playwright() as p:
@@ -2512,7 +2542,7 @@ def main():
                 return
 
             if plateforme == "wttj":
-                # â”€â”€ Login â”€â”€
+                # ?"[STUFF] Login ?"[STUFF]
                 se_connecter_wttj(page, context)
             elif plateforme == "vie" and getattr(config, "VIE_MANUAL_LOGIN", True):
                 se_connecter_vie(page)
@@ -2521,7 +2551,7 @@ def main():
             elif plateforme == "hellowork":
                 se_connecter_hellowork(page)
 
-            # â”€â”€ Ã‰tape 1 : Collecter les offres â”€â”€
+            # ?"[STUFF] ??tape 1 : Collecter les offres ?"[STUFF]
             # IMPORTANT: on ne limite pas ici par max_offres, sinon les offres ignorees
             # consomment le stock collecte et on n'atteint pas l'objectif d'envois.
             if plateforme == "wttj":
@@ -2534,35 +2564,35 @@ def main():
                 offres = recuperer_toutes_offres_vie(page, url_recherche, max_offres=None, max_pages=max_pages)
             
             if not offres:
-                print("âŒ Aucune offre trouvÃ©e. VÃ©rifie l'URL de recherche.")
+                print("[INFO]? Aucune offre trouv[INFO]e. V[INFO]rifie l'URL de recherche.")
                 sys.exit(1)
             
-            # â”€â”€ Ã‰tape 2 : Traiter chaque offre â”€â”€
+            # ?"[STUFF] ??tape 2 : Traiter chaque offre ?"[STUFF]
             candidatures_envoyees = 0
             deja_vues_run = set()
             objectif = max_offres
 
             for i, offre_base in enumerate(offres, 1):
                 if objectif is not None and candidatures_envoyees >= objectif:
-                    print("\n✅ Quota atteint pour ce run, arret du traitement.")
+                    print("\n[OK] Quota atteint pour ce run, arret du traitement.")
                     break
 
                 url = offre_base["url"]
                 objectif_label = objectif if objectif is not None else "infini"
-                print(f"\n[{candidatures_envoyees}/{objectif_label}] {'â”€' * 50}")
+                print(f"\n[{candidatures_envoyees}/{objectif_label}] {'-' * 50}")
                 
                 if url in deja_vues_run:
-                    print("  ⏭️  Doublon detecte dans ce run, on passe")
+                    print("  [INFO]  Doublon detecte dans ce run, on passe")
                     continue
                 deja_vues_run.add(url)
 
-                # DÃ©jÃ  postulÃ© ?
+                # Deja postule ?
                 if deja_postule(url):
-                    print(f"  â­ï¸  DÃ©jÃ  traitÃ©, on passe")
+                    print(f"  [INFO] Deja traite, on passe")
                     continue
                 
                 try:
-                    # RÃ©cupÃ©rer les dÃ©tails de l'offre
+                    # Recuperer les details de l'offre
                     if plateforme == "glassdoor":
                         # Sur Glassdoor, on postule carte par carte sans naviguer sur chaque URL
                         # pour eviter de casser le contexte de recherche.
@@ -2575,37 +2605,57 @@ def main():
                     offre["langue"] = langue_offre
                     print(f"  [LANG] Langue detectee: {'anglais' if langue_offre == 'en' else 'francais'}")
                     
+                    cv_path_a_utiliser = cv_path_abs
+                    if cv_mode == "pptx" and pptx_path:
+                        try:
+                            from cv_tailor import adapter_cv_pptx
+                            # adapter_cv_pptx s'occupe de generer le PDF et renvoie son chemin absolu
+                            nouveau_cv = adapter_cv_pptx(pptx_path, offre, dossier_sortie="cv_genere")
+                            if nouveau_cv and os.path.exists(nouveau_cv):
+                                cv_path_a_utiliser = nouveau_cv
+                        except Exception as ex:
+                            print(f"  [WARN] Erreur generation CV PPTX : {ex}")
+                    elif cv_mode == "html":
+                        try:
+                            from html_tailor import adapter_cv_html
+                            # adapter_cv_html s'occupe de generer le HTML, de le convertir en PDF et renvoie le chemin du PDF
+                            nouveau_cv = adapter_cv_html("cv_template.html", offre, dossier_sortie="cv_genere")
+                            if nouveau_cv and os.path.exists(nouveau_cv):
+                                cv_path_a_utiliser = nouveau_cv
+                        except Exception as ex:
+                            print(f"  [WARN] Erreur generation CV HTML : {ex}")
+                    
                     # Postuler
                     if plateforme == "wttj":
-                        succes = postuler_offre(page, offre, cv_texte, cv_path_abs, langue=langue_offre)
+                        succes = postuler_offre(page, offre, cv_texte, cv_path_a_utiliser, langue=langue_offre, skip_letter=args.skip_letter)
                     elif plateforme == "glassdoor":
                         succes = postuler_offre_glassdoor(page, offre, cv_texte, langue=langue_offre)
                     elif plateforme == "hellowork":
-                        succes = postuler_offre_hellowork(page, offre, cv_texte, langue=langue_offre)
+                        succes = postuler_offre_hellowork(page, offre, cv_texte, langue=langue_offre, skip_letter=args.skip_letter)
                     else:
-                        succes = postuler_offre_vie(page, offre, cv_texte, cv_path_abs, langue=langue_offre)
+                        succes = postuler_offre_vie(page, offre, cv_texte, cv_path_a_utiliser, langue=langue_offre)
                     
                     if succes:
                         candidatures_envoyees += 1
-                        print(f"  ✅ Progression: {candidatures_envoyees}/{objectif_label}")
+                        print(f"  [OK] Progression: {candidatures_envoyees}/{objectif_label}")
                     
-                    # DÃ©lai entre candidatures
+                    # D??lai entre candidatures
                     if i < len(offres):
-                        print(f"  â³ Attente {config.DELAI_ENTRE_CANDIDATURES}s...")
+                        print(f"  [INFO]? Attente {config.DELAI_ENTRE_CANDIDATURES}s...")
                         time.sleep(config.DELAI_ENTRE_CANDIDATURES)
                 
                 except Exception as e:
-                    print(f"  âŒ Erreur inattendue : {e}")
+                    print(f"  [INFO]? Erreur inattendue : {e}")
                     log_candidature(url, offre_base.get("titre", "?"), "?", "erreur", str(e))
-                    # Revenir Ã  un Ã©tat propre
+                    # Revenir ?  un ??tat propre
                     try:
                         page.goto("about:blank")
                         time.sleep(1)
                     except Exception:
                         pass
             
-            print(f"\n{'â•' * 60}")
-            print(f"ðŸ Bot terminÃ© ! {candidatures_envoyees} candidature(s) envoyÃ©e(s) ce run.")
+            print(f"\n{'*' * 60}")
+            print(f"[INFO] Bot termine ! {candidatures_envoyees} candidature(s) envoyee(s) ce run.")
             afficher_stats()
         
         finally:

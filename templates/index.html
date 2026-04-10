@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Job Applier AI - Dashboard</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'wttj-primary': '#FFD000', // Yellow Welcome to the jungle Theme
+                        'dark-bg': '#0f172a',
+                        'dark-card': '#1e293b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fira Code for Terminal -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+            background-attachment: fixed;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .terminal {
+            font-family: 'Fira Code', monospace;
+            background-color: #050505;
+            color: #00ff00;
+        }
+        .terminal-line { margin-bottom: 2px; line-height: 1.4; word-wrap: break-word; }
+        .terminal-line.error { color: #ff5555; }
+        .terminal-line.warning { color: #ffff55; }
+        .terminal-line.success { color: #55ff55; }
+        .terminal-line.system { color: #55ffff; }
+        
+        /* Custom Scrollbar for terminal */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+        .btn-glow {
+            transition: all 0.3s ease;
+        }
+        .btn-glow:hover:not(:disabled) {
+            box-shadow: 0 0 15px rgba(255, 208, 0, 0.6);
+            transform: translateY(-2px);
+        }
+        .pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6">
+
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- HEADER -->
+    <header class="flex items-center justify-between glass-card p-6 rounded-2xl">
+            <div class="w-14 h-14 rounded-xl overflow-hidden border-2 border-slate-700 shadow-xl">
+                <img src="/static/logo.png" alt="Logo" class="w-full h-full object-cover" />
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight">Universal Job Applier AI</h1>
+                <p class="text-slate-400 text-sm font-medium">Dashboard de pilotage & Tracking intelligent</p>
+            </div>
+        
+        <!-- STATUS BADGE -->
+        <div class="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700">
+            <span class="text-sm font-medium text-slate-300">Statut du Bot:</span>
+            <div id="statusBadge" class="flex items-center gap-2">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+                <span class="text-sm font-bold text-red-400">ARRÊTÉ</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN GRID (Terminal + Controls) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- TERMINAL PANEL (col-span-2) -->
+        <div class="lg:col-span-2 glass-card rounded-2xl flex flex-col h-[500px] overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-slate-400"></i>
+                    <span class="text-sm font-semibold text-slate-300 tracking-wider">MOTEUR D'ÉXÉCUTION (Live)</span>
+                </div>
+                <div class="flex gap-1.5">
+                    <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                </div>
+            </div>
+            <div id="terminalBody" class="terminal p-4 flex-1 overflow-y-auto text-sm">
+                <div class="terminal-line system">[SYSTEM] Dashboard initialisé. En attente du lancement...</div>
+            </div>
+            <div class="bg-slate-900/80 px-4 py-2 text-xs text-slate-500 flex justify-between border-t border-slate-800">
+                <span id="connectionStatus">● Connecté au serveur des logs (SSE)</span>
+                <button onclick="document.getElementById('terminalBody').innerHTML=''" class="hover:text-white transition-colors duration-200">
+                    <i class="fa-solid fa-eraser mr-1"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTROLS PANEL -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-wttj-primary"></i> Parametrages
+                </h2>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-slate-400 text-xs font-semibold mb-1.5 uppercase tracking-wider">URL de Recherche / Offre</label>
+                        <input id="searchUrl" type="text" 
+                               placeholder="URL Welcome to the Jungle ou VIE..." 
+                               class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-wttj-primary/30 focus:border-wttj-primary transition-all shadow-inner">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 text-xs font-semibold mb-1.5 uppercase tracking-wider">Méthode CV</label>
+                            <select id="cvMode" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-wttj-primary cursor-pointer transition-colors shadow-sm">
+                                <option value="direct">Direct PDF</option>
+                                <option value="pptx">IA Modif (PPTX)</option>
+                                <option value="html">IA Modif (HTML)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 text-xs font-semibold mb-1.5 uppercase tracking-wider">Modèle IA</label>
+                            <select id="llmChoice" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-wttj-primary cursor-pointer transition-colors shadow-sm">
+                                <option value="mistral">Mistral (Défaut)</option>
+                                <option value="openai">OpenAI (GPT-4o)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 text-xs font-semibold mb-1.5 uppercase tracking-wider">Max Offres</label>
+                            <input id="maxOffres" type="number" value="10" min="1" max="100"
+                                   class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-wttj-primary/30 focus:border-wttj-primary transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 text-xs font-semibold mb-1.5 uppercase tracking-wider">Max Pages</label>
+                            <input id="maxPages" type="number" value="3" min="1" max="50"
+                                   class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-wttj-primary/30 focus:border-wttj-primary transition-all">
+                        </div>
+                    </div>
+
+                    <!-- OPTIONAL COVER LETTER TOGGLE -->
+                    <div class="flex items-center gap-3 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 hover:bg-slate-800/60 transition-all cursor-pointer" onclick="document.getElementById('skipLetter').click()">
+                        <div class="relative flex items-center cursor-pointer">
+                            <input type="checkbox" id="skipLetter" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wttj-primary"></div>
+                        </div>
+                        <span class="text-xs font-bold text-slate-200 uppercase tracking-tighter">Sauter la lettre (si optionnel)</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/40 rounded-xl p-4 border border-slate-700 mb-6 group hover:border-slate-600 transition-colors">
+                    <div class="flex justify-between items-center">
+                        <div class="flex flex-col">
+                            <span class="text-slate-400 text-xs uppercase font-bold tracking-widest">Candidatures</span>
+                            <span class="text-xs text-slate-500">Session actuelle</span>
+                        </div>
+                        <span class="text-3xl font-black text-wttj-primary drop-shadow-[0_0_10px_rgba(255,208,0,0.2)]" id="totalApps">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btnStartBot" class="btn-glow w-full py-4 rounded-xl bg-wttj-primary text-slate-900 font-bold text-lg shadow-[0_0_15px_rgba(255,208,0,0.3)] flex items-center justify-center gap-3 transition-opacity">
+                <i class="fa-solid fa-play"></i>
+                LANCER LE BOT WTTJ
+            </button>
+
+            <!-- BOUTON DE REPRISE MANUELLE -->
+            <button id="btnResume" class="hidden w-full mt-3 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all animate-pulse">
+                <i class="fa-solid fa-hand-pointer"></i>
+                VALIDER ACTION MANUELLE
+            </button>
+        </div>
+    </div>
+
+    <!-- TRACKING TABLE -->
+    <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-800 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-wttj-primary"></i> Suivi des Candidatures
+            </h2>
+            <button onclick="fetchCandidatures()" class="text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> Rafraîchir
+            </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
+                        <th class="px-6 py-4 font-semibold">Entreprise</th>
+                        <th class="px-6 py-4 font-semibold">Poste</th>
+                        <th class="px-6 py-4 font-semibold">Date</th>
+                        <th class="px-6 py-4 font-semibold">Statut</th>
+                        <th class="px-6 py-4 font-semibold text-right">Lien de l'Offre</th>
+                    </tr>
+                </thead>
+                <tbody id="candidaturesTableBody" class="divide-y divide-slate-800/50 text-sm">
+                    <!-- Data is populated via JS -->
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-slate-500 italic">
+                            <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Chargement des données...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- JAVASCRIPT LOGIC -->
+<script>
+    // Elements
+    const terminal = document.getElementById('terminalBody');
+    const btnStart = document.getElementById('btnStartBot');
+    const btnResume = document.getElementById('btnResume');
+    const statusBadge = document.getElementById('statusBadge');
+    const tableBody = document.getElementById('candidaturesTableBody');
+    const totalApps = document.getElementById('totalApps');
+
+    // Add log line to terminal
+    function appendLog(rawLine) {
+        // Ignorer les heartbeats vides
+        if(!rawLine || rawLine.trim() === "") return;
+        
+        const div = document.createElement('div');
+        div.className = 'terminal-line';
+        
+        let text = rawLine;
+        
+        // Basic Syntax Highlighting rules
+        if(text.includes('[ERROR]') || text.includes('Exception') || text.includes('❌')) {
+            div.classList.add('error');
+        } else if(text.includes('[WARN]') || text.includes('⚠️')) {
+            div.classList.add('warning');
+        } else if(text.includes('SUCCESS') || text.includes('✅') || text.includes('[OK]')) {
+            div.classList.add('success');
+        } else if(text.includes('---') || text.includes('[SYSTEM]')) {
+            div.classList.add('system');
+        } else {
+            div.style.color = '#cccccc'; // Muted grey for normal text
+        }
+        
+        div.textContent = text;
+        terminal.appendChild(div);
+        
+        // Détecter les actions manuelles pour afficher le bouton de reprise
+        if(text.includes('[ACTION]')) {
+            btnResume.classList.remove('hidden');
+        }
+        
+        // Auto scroll to bottom
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // Server-Sent Events for live logs
+    function setupSSE() {
+        const evtSource = new EventSource('/api/stream-logs');
+        
+        evtSource.onmessage = function(e) {
+            if(e.data !== "heartbeat") {
+                appendLog(e.data);
+            }
+        };
+        
+        evtSource.onerror = function() {
+            document.getElementById('connectionStatus').innerHTML = '<span class="text-orange-500">● Connexion perdue, tentative de reconnexion...</span>';
+        };
+        
+        evtSource.onopen = function() {
+            document.getElementById('connectionStatus').innerHTML = '<span class="text-green-500">● Connecté au tunnel de logs (SSE)</span>';
+        }
+    }
+
+    // Refresh Candidatures Table
+    async function fetchCandidatures() {
+        const icon = document.getElementById('refreshIcon');
+        icon.classList.add('fa-spin');
+        
+        try {
+            const res = await fetch('/api/candidatures');
+            const data = await res.json();
+            
+            if(data.success && data.candidatures) {
+                // Determine format
+                let apps = data.candidatures;
+                
+                totalApps.innerText = apps.length;
+                
+                if(apps.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Aucune candidature enregistrée dans le fichier JSON pour le moment.</td></tr>`;
+                    return;
+                }
+                
+                // Parse Dict structure to Array if necessary (Handle both WTTJ JSON schemas)
+                let rows = '';
+                
+                for(let app of Object.values(apps)) {
+                    // Extract fields safely
+                    const company = app.entreprise || "Inconnue";
+                    const title = app.poste || app.titre || "Non précisé";
+                    const status = app.statut || app.status || "Terminé";
+                    const date = app.date || "-";
+                    const url = app.url || app.link || "#";
+                    
+                    // Status Badge Color
+                    let statusClass = "bg-slate-700 text-slate-300";
+                    if(status.toLowerCase().includes('succès') || status.toLowerCase().includes('success') || status.toLowerCase().includes('envoyé')) {
+                        statusClass = "bg-green-500/20 text-green-400 border border-green-500/30";
+                    } else if (status.toLowerCase().includes('erreur') || status.toLowerCase().includes('echec') || status.toLowerCase().includes('fail')) {
+                        statusClass = "bg-red-500/20 text-red-400 border border-red-500/30";
+                    } else {
+                        statusClass = "bg-blue-500/20 text-blue-400 border border-blue-500/30";
+                    }
+                    
+                    rows += `
+                        <tr class="hover:bg-slate-800/30 transition-colors group">
+                            <td class="px-6 py-4 font-semibold text-white">${company}</td>
+                            <td class="px-6 py-4 text-slate-300">${title}</td>
+                            <td class="px-6 py-4 text-slate-400 whitespace-nowrap">${date}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-medium ${statusClass}">
+                                    ${status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="${url}" target="_blank" class="text-wttj-primary hover:text-yellow-300 transition-colors ${url === '#' ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                tableBody.innerHTML = rows;
+            }
+        } catch (e) {
+            console.error("Erreur read JSON", e);
+        } finally {
+            setTimeout(() => icon.classList.remove('fa-spin'), 500);
+        }
+    }
+
+    // Check backend status loop
+    async function checkBotStatus() {
+        try {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+            
+            if(data.isRunning) {
+                statusBadge.innerHTML = `
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    <span class="text-sm font-bold text-green-400">EN COURS D'EXÉCUTION...</span>
+                `;
+                btnStart.disabled = true;
+                btnStart.classList.add('opacity-50', 'cursor-not-allowed', 'pulse-slow');
+                btnStart.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ROBOT ACTIF`;
+            } else {
+                statusBadge.innerHTML = `
+                    <span class="relative flex h-3 w-3">
+                      <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-20"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <span class="text-sm font-bold text-red-400">EN ATTENTE</span>
+                `;
+                btnStart.disabled = false;
+                btnStart.classList.remove('opacity-50', 'cursor-not-allowed', 'pulse-slow');
+                btnStart.innerHTML = `<i class="fa-solid fa-play"></i> LANCER L'AUTOMATION`;
+            }
+        } catch (e) {}
+    }
+
+    // Start Bot Action
+    btnStart.addEventListener('click', async () => {
+        const url = document.getElementById('searchUrl').value.trim();
+        const cv_mode = document.getElementById('cvMode').value;
+        const llm = document.getElementById('llmChoice').value;
+        const max_offres = document.getElementById('maxOffres').value;
+        const max_pages = document.getElementById('maxPages').value;
+        const skip_letter = document.getElementById('skipLetter').checked;
+
+        if(!url) {
+            alert("Veuillez entrer une URL de recherche ou d'offre.");
+            return;
+        }
+
+        btnStart.disabled = true;
+        btnStart.classList.add('opacity-50', 'pulse-slow');
+        btnStart.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> DÉMARRAGE...`;
+        appendLog(`[SYSTEM] Lancement du bot avec URL: ${url} (Mode: ${cv_mode}, SkipLetter: ${skip_letter})`);
+        
+        try {
+            const res = await fetch('/api/start-bot', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, cv_mode, llm, max_offres, max_pages, skip_letter })
+            });
+            const data = await res.json();
+            
+            if(data.status === "error") {
+                appendLog(`[ERROR] Impossible de démarrer : ${data.message}`);
+                btnStart.disabled = false;
+            } else {
+                appendLog(`[SYSTEM] Succès : Processus bot démarré.`);
+            }
+        } catch (e) {
+            appendLog(`[ERROR] Erreur réseau : ${e}`);
+            btnStart.disabled = false;
+        }
+        
+        checkBotStatus();
+    });
+
+    // Resume Bot Action (Manual Validation)
+    btnResume.addEventListener('click', async () => {
+        btnResume.classList.add('opacity-50', 'pointer-events-none');
+        btnResume.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ENVOI DU SIGNAL...`;
+        
+        try {
+            const res = await fetch('/resume', { method: 'POST' });
+            const data = await res.json();
+            if(data.status === "success") {
+                // On cache le bouton après succès, il réapparaîtra si un autre [ACTION] arrive
+                setTimeout(() => {
+                    btnResume.classList.add('hidden');
+                    btnResume.classList.remove('opacity-50', 'pointer-events-none');
+                    btnResume.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> VALIDER ACTION MANUELLE`;
+                }, 1000);
+            } else {
+                alert("Erreur : " + data.message);
+                btnResume.classList.remove('opacity-50', 'pointer-events-none');
+                btnResume.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> VALIDER ACTION MANUELLE`;
+            }
+        } catch (e) {
+            alert("Erreur réseau : " + e);
+            btnResume.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    });
+
+    // INIT
+    setupSSE();
+    fetchCandidatures();
+    checkBotStatus();
+    
+    // Polling Intervals
+    setInterval(fetchCandidatures, 5000); // 5 sec update json
+    setInterval(checkBotStatus, 2000); // 2 sec update app state
+
+</script>
+
+</body>
+</html>

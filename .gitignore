@@ -1,5 +1,12 @@
-﻿# Secrets
+# Secrets & Personal Data
 .env
+user_data/*.txt
+candidatures.json
+
+# Workspace
+.gemini/
+.agents/
+.agent/
 
 # Python
 __pycache__/
@@ -7,11 +14,16 @@ __pycache__/
 .venv/
 venv/
 
-# Runtime outputs
-candidatures.json
+# Generated CVs and Logs
+*.pdf
+*.pptx
+cv_genere/
+cv_modifie/
 lettres_motivation_generees/
+test_cv_outputs/
 
 # OS / editors
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/

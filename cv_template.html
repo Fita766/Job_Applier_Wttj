@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV {{CANDIDAT_NAME}}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: #f0f2f5; 
+            font-family: 'Inter', sans-serif; 
+            color: #333;
+            display: flex; justify-content: center;
+            padding: 40px 0;
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* A4 Page Formatting */
+        .page {
+            width: 210mm;
+            height: 297mm;
+            background: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            body { padding: 0; background-color: transparent; }
+            .page { box-shadow: none; width: auto; height: auto; min-height: 297mm; }
+        }
+
+        /* Header & Contact */
+        .header {
+            padding: 25mm 20mm 10mm 20mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #004d80;
+        }
+        
+        .header-main h1 {
+            font-size: 28pt;
+            font-weight: 700;
+            color: #004d80; /* Bleu corporate AXA/Classic */
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .contact-info {
+            text-align: right;
+            font-size: 10pt;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .contact-info span { display: block; }
+
+        /* Summary Section */
+        .summary {
+            padding: 10mm 20mm;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #444;
+            background-color: #f8fbfc;
+        }
+        
+        .summary strong { color: #004d80; }
+
+        /* Main Content Grid */
+        .main-content {
+            display: grid;
+            grid-template-columns: 7fr 3fr; /* 70% Experience, 30% Sidebar (Formations/Skills) */
+            padding: 0 20mm 20mm 20mm;
+            gap: 15mm;
+            flex-grow: 1;
+        }
+
+        /* Titles */
+        .section-title {
+            font-size: 14pt;
+            font-weight: 600;
+            color: #004d80;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* EXPERIENCE BLOCKS */
+        .experience {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .exp-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            align-items: baseline;
+        }
+
+        .exp-role-company {
+            font-weight: 700;
+            font-size: 12pt;
+            color: #222;
+        }
+
+        .exp-date-location {
+            font-size: 10pt;
+            color: #777;
+            text-align: right;
+        }
+
+        .exp-subtitle {
+            font-size: 10.5pt;
+            font-weight: 600;
+            color: #004d80;
+            margin-bottom: 8px;
+            margin-top: 4px;
+        }
+
+        ul.exp-bullets {
+            list-style-type: none; /* We use custom bullets */
+            padding-left: 0;
+            margin-top: 5px;
+        }
+
+        ul.exp-bullets li {
+            position: relative;
+            padding-left: 15px;
+            margin-bottom: 6px;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        ul.exp-bullets li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #004d80;
+            font-weight: bold;
+        }
+
+        /* SIDEBAR (Right) */
+        .sidebar {
+            border-left: 1px solid #eee;
+            padding-left: 10mm;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .edu-item { margin-bottom: 15px; }
+        .edu-date { font-weight: 600; font-size: 10pt; color: #004d80; }
+        .edu-degree { font-size: 10pt; font-weight: 600; margin-top:2px; color: #333; }
+        .edu-school { font-size: 9pt; color: #666; }
+
+        .skill-group { margin-bottom: 12px; }
+        .skill-title { font-weight: 600; font-size: 10pt; color: #333; display: block; margin-bottom: 3px; }
+        .skill-list { font-size: 9.5pt; color: #555; line-height: 1.4; }
+
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-main">
+                <h1>{{PRENOM}} {{NOM}}</h1>
+            </div>
+            <div class="contact-info">
+                <span>Tel : {{TELEPHONE}}</span>
+                <span>{{EMAIL}}</span>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary">
+            <strong>Chef de Produit au sein d’AXA Banque : 1 an d’expérience en gestion de projet Epargne.</strong><br>
+            Compétences : coordination de projets transverses, pilotage de stratégies Go-to-Market, conception et diffusion de campagnes multicanales, suivi de la performance (KPI), amélioration des processus internes, production de reportings.<br>
+            Organisé, dynamique et orienté résultats, je souhaite poursuivre ma carrière dans le Conseil en transformation digitale ou en tant que Chef de Projet Junior sur des projets à forts enjeux.
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            
+            <!-- Left Column: Experiences -->
+            <div class="experiences">
+                <div class="section-title">Expériences professionnelles</div>
+                
+                <!-- EXP 1 -->
+                <div class="experience">
+                    <div class="exp-header">
+                        <div class="exp-role-company">Marketing Project Officer – Savings & Investment | AXA banque</div>
+                        <div class="exp-date-location">2024 - 2025 | Paris</div>
+                    </div>
+                    <div class="exp-subtitle">➔ {{EXP1_SUBTITLE}}</div>
+                    <ul class="exp-bullets">
+                        {{EXP1_BULLETS}}
+                    </ul>
+                </div>
+
+                <!-- EXP 2 -->
+                <div class="experience">
+                    <div class="exp-header">
+                        <div class="exp-role-company">Assistant Chef de projet | Helpline</div>
+                        <div class="exp-date-location">2023 – 2024 | Paris</div>
+                    </div>
+                    <div class="exp-subtitle">➔ {{EXP2_SUBTITLE}}</div>
+                    <ul class="exp-bullets">
+                        {{EXP2_BULLETS}}
+                    </ul>
+                </div>
+
+                <!-- EXP 3 -->
+                <div class="experience">
+                    <div class="exp-header">
+                        <div class="exp-role-company">Chef de projet Marketing & Automatisation | TSN</div>
+                        <div class="exp-date-location">2022 - 2023</div>
+                    </div>
+                    <!-- Exp 3 sometimes lacks subtitle, we'll put it in bullets directly -->
+                    <ul class="exp-bullets">
+                        {{EXP3_BULLETS}}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <div class="section-title">Formation</div>
+                    
+                    <div class="edu-item">
+                        <div class="edu-date">2023 - 2025</div>
+                        <div class="edu-degree">Master Stratégie & E-Business</div>
+                        <div class="edu-school">Pôle Léonard de Vinci — Paris</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Langues</div>
+                    <div class="skill-group">
+                        <span class="skill-title">Français</span>
+                        <span class="skill-list">Langue maternelle</span>
+                    </div>
+                    <div class="skill-group">
+                        <span class="skill-title">Anglais</span>
+                        <span class="skill-list">Niveau B2</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Compétences</div>
+                    <div class="skill-group">
+                        <span class="skill-title">Stratégie Marketing & growth</span>
+                        <span class="skill-list">Full-Funnel, activation, ABM, go-to-Market</span>
+                    </div>
+                    <div class="skill-group">
+                        <span class="skill-title">Pilotage de projets</span>
+                        <span class="skill-list">Coordination transverse, cadrage, planning, delivery</span>
+                    </div>
+                    <div class="skill-group">
+                        <span class="skill-title">Data & performance</span>
+                        <span class="skill-list">KPI tracking, A/B testing, optimisation des funnels</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Outils</div>
+                    <div class="skill-list">
+                        Salesforce Marketing Cloud, Zoho CRM, Power BI, Looker Studio, NextJS (notions)
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

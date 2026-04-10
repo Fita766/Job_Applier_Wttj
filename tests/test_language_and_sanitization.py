@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 from unittest.mock import patch
 
 import ai_helper
@@ -19,7 +19,7 @@ class LanguageAndSanitizationTests(unittest.TestCase):
         )
 
     def test_lettre_supprime_entete_coordonnees_objet(self):
-        brut = """Vincent Ducastel\nTel : +33 6 16 74 59 97\nducastel.v@live.fr\n\nParis, le janvier 2026\nA l'attention du recruteur\nObjet: Candidature\n\nJe suis motive pour ce poste."""
+        brut = f"{config.PRENOM} {config.NOM}\nTel : 0601020304\nmon.email@example.com\n\nParis, le janvier 2026\nA l'attention du recruteur\nObjet: Candidature\n\nJe suis motive pour ce poste."
         with patch("ai_helper._call_openai", return_value=brut), patch("ai_helper._call_mistral", return_value="fallback"):
             lettre = ai_helper.generer_lettre_motivation("CV", {"titre": "Role", "entreprise": "Company", "description": "Desc"}, langue="fr")
 
@@ -31,7 +31,7 @@ class LanguageAndSanitizationTests(unittest.TestCase):
         self.assertTrue(lettre.startswith("Je ") or lettre.startswith("Mon ") or lettre.startswith("Si "))
 
     def test_reponse_question_oui_non_ne_devient_pas_une_lettre(self):
-        brut = """Vincent Ducastel\nTel : +33 6 16 74 59 97\n\nJe suis tres enthousiaste...\n\nYes, I am fluent in English."""
+        brut = f"{config.PRENOM} {config.NOM}\nTel : 0601020304\n\nJe suis tres enthousiaste...\n\nYes, I am fluent in English."
         with patch("ai_helper._call_mistral", return_value=brut):
             rep = ai_helper.repondre_question(
                 "CV",

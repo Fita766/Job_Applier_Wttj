@@ -1,4 +1,6 @@
-﻿import unittest
+import unittest
+import config
+from unittest.mock import patch
 
 from main import extraire_question_utilisable, detecter_langue_question, detecter_type_reponse_question
 
@@ -7,8 +9,8 @@ class QuestionParsingTests(unittest.TestCase):
     def test_extrait_premiere_question_dans_un_bloc_bruyant(self):
         brut = """Are you fluent in English?
 
-Vincent Ducastel
-Tel : +33 6 16 74 59 97
+Jean DUPONT
+Tel : 0601020304
 Je suis tres enthousiaste...
 Will you be able to work from the office in Paris 2e (75002) everyday?"""
         self.assertEqual(extraire_question_utilisable(brut), "Are you fluent in English?")

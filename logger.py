@@ -1,4 +1,4 @@
-﻿"""Logger pour suivre les candidatures envoyees."""
+"""Logger pour suivre les candidatures envoyees."""
 import json
 import os
 import unicodedata
@@ -63,10 +63,10 @@ def log_candidature(url: str, titre: str, entreprise: str, statut: str, notes: s
 
     if statut_normalise == "envoyee":
         data["candidatures"].append(entree)
-        print(f"  ✅ Candidature envoyee : {titre} @ {entreprise}")
+        print(f"  [OK] Candidature envoyee : {titre} @ {entreprise}")
     else:
         data["ignorees"].append(entree)
-        print(f"  ⏭️  Ignoree ({notes}) : {titre} @ {entreprise}")
+        print(f"  [INFO] Ignoree ({notes}) : {titre} @ {entreprise}")
 
     sauvegarder_log(data)
 
@@ -75,8 +75,8 @@ def afficher_stats():
     data = charger_log()
     total_envoyees = len(data["candidatures"])
     total_ignorees = len(data["ignorees"])
-    print(f"\n📊 Stats : {total_envoyees} candidature(s) envoyee(s), {total_ignorees} ignoree(s)")
+    print(f"\n[STATS] {total_envoyees} candidature(s) envoyee(s), {total_ignorees} ignoree(s)")
     if data["candidatures"]:
-        print("\n🎯 Dernieres candidatures :")
+        print("\n[INFO] Dernieres candidatures :")
         for c in data["candidatures"][-5:]:
-            print(f"   • {c.get('titre', '?')} @ {c.get('entreprise', '?')} ({c.get('date', '')[:10]})")
+            print(f"   - {c.get('titre', '?')} @ {c.get('entreprise', '?')} ({c.get('date', '')[:10]})")

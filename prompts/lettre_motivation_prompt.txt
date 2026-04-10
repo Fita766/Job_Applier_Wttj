@@ -1,4 +1,4 @@
-﻿Voici le CV du candidat :
+Voici le CV du candidat :
 <cv>
 {cv_texte}
 </cv>
@@ -18,27 +18,55 @@ Informations sur le candidat :
 - Type de contrat recherche : {type_contrat}
 {cv_context_line}
 
+Redige une lettre de motivation en {langue_prompt} pour ce poste.
 
-fais moi une lettre de motivation audacieuse pour ce poste sans texte en gras, sans object. Ne suce pas, je veux de l'aude et de la fluidité. Pas un truc trop sucage de couille. Bouscule les codes mais reste pro
-Exemple "Madame, Monsieur,
+REGISTRE ET TON :
+- Registre soutenu, langage intellectuel, phrases longues et structurees
+- Vocabulaire riche et precis : privilegier des formulations elaborees (ex: "orchestration", "granularite", "dynamiques decisionnelles", "comprehension systemique", "articulation", "dispositif", "configuration")
+- JAMAIS de mots simples ou buzzwords : interdiction formelle de "IA", "intelligence artificielle", "digital", "innovant", "passionné", "dynamique", "challenge"
+- Rendre complexe ce qui est simple : transformer les concepts basiques en formulations intellectuelles (ex: au lieu de "j'ai fait du scraping", dire "j'ai concu des architectures capables d'integrer et de qualifier des flux d'informations heterogenes")
+- Ton distant et analytique : le candidat se positionne comme un profil reflechi, pas comme un vendeur
+- ZERO flatterie envers l'entreprise : pas de "votre entreprise formidable", pas de "j'admire votre vision"
+- Pas de listes a puces, pas de bullet points
+- Pas de texte en gras, pas d'objet, pas de placeholders entre crochets
+- Pas de tirets longs
 
-Si vous cherchez un Business Developer capable de transformer une opportunité en succès concret, vous venez de trouver votre candidat. Mon parcours en gestion de projet marketing, en automatisation commerciale et en activation digitale m’a préparé à exceller dans un environnement exigeant et innovant comme celui d’Adventiel.
+STRUCTURE :
+1. "Madame, Monsieur," puis saut de ligne
+2 Introduction : lien entre mon parcours et le poste
+3 Développement : expériences + projets (si il y a) + posture
+4 Conclusion : projection dans l’entreprise
+5. Signature : {prenom} {nom}
 
-Chez AXA Banque, j’ai piloté le lancement de deux offres d’épargne Premium pour une clientèle CSP+, orchestrant la coordination entre Produit, Juridique, Finance et Réseau Commercial. Résultat : des campagnes multicanales impactantes touchant plus de 100 000 clients avec un taux d’ouverture moyen de 63 %. Chez Helpline, j’ai conçu un outil de prospection avancée intégrant scraping, scoring et séquencement automatisé, réduisant de 70 % le temps de qualification des leads. Ces expériences m’ont appris à détecter les besoins des clients avant même qu’ils ne les formulent et à proposer des solutions qui dépassent leurs attentes.
+CONTRAINTES :
+- {ton}
+- Longueur : entre {longueur}
+- Parler strictement a la premiere personne du singulier
+- Ne jamais mentionner Talaryo
+- L'entreprise cible est {offre_entreprise}, le poste cible est {offre_titre} : ne JAMAIS cibler une autre entreprise
+- Le texte doit etre suffisamment specifique a l'offre pour ne pas paraitre generique
+- Évite absolument les phrases génériques et les clichés de lettre de motivation.
+- Chaque phrase doit apporter une idée ou un niveau d’abstraction supplémentaire.
+- Écris comme si le lecteur était exigeant intellectuellement et habitué à des profils de haut niveau (conseil, stratégie, fondateurs).
 
-Ce qui m’attire chez Adventiel, c’est votre capacité à allier expertise technique et stratégie business. Je suis prêt à :
+Objectif : 
+- Montrer que je suis particulièrement pertinent pour le rôle
+- Donner une impression de profondeur intellectuelle et de maturité stratégique
+- Donner envie de me positionner comme un profil à fort potentiel
 
-Définir des cibles pertinentes et les conquérir avec des campagnes et actions de prospection ciblées.
+EXEMPLE DE STYLE PARFAIT (a adapter, ne pas copier tel quel) :
+"Madame, Monsieur,
 
-Analyser les besoins clients pour proposer des solutions logicielles sur mesure.
+Votre positionnement, a l'intersection de la technologie, de la donnee et des enjeux de transformation durable, resonne particulierement avec la trajectoire que je construis depuis plusieurs annees : celle d'un profil capable d'articuler comprehension systemique, exigence operationnelle et conception de solutions au contact direct des usages.
 
-Transformer les échanges commerciaux en partenariats solides et durables.
+Au cours de mes experiences, notamment en tant que chef de projet marketing au sein d'AXA Banque, j'ai ete amene a piloter des dispositifs complexes impliquant une multiplicite d'acteurs et de contraintes, tout en assurant la coherence entre vision strategique, exigences reglementaires et deploiement operationnel. Cette exposition m'a permis de developper une capacite a naviguer dans des environnements fortement structures, ou la qualite de l'execution repose autant sur la precision technique que sur la fluidite des interactions entre equipes.
 
-Organisé, dynamique et orienté résultats, je ne me contente pas de suivre un plan : je crée des opportunités là où d’autres voient des obstacles. Ma maîtrise des outils CRM, de l’automatisation marketing et de la data-driven performance sera un atout pour propulser vos ventes et renforcer la visibilité d’Adventiel sur vos marchés cibles.
+C'est dans la conception et le deploiement de projets entrepreneuriaux que j'ai approfondi cette capacite a faire le lien entre complexite technique et valeur d'usage. Ayant developpe une plateforme SaaS, pensee comme un systeme d'orchestration de la prospection et du recrutement, dont l'ambition est de transformer des flux d'informations heterogenes en dynamiques decisionnelles exploitables. Ce projet m'a conduit a structurer des architectures capables d'integrer, de qualifier et d'activer des donnees a differents niveaux de granularite, tout en maintenant une coherence globale orientee utilisateur.
 
-Je serais ravi de vous rencontrer pour vous montrer comment mon énergie et mes compétences peuvent concrètement contribuer à vos objectifs commerciaux. Osons ensemble repousser les limites du développement logiciel et commercial.
+Cette demarche m'a naturellement amene a occuper une position d'interface : comprendre des besoins implicites, les traduire en configurations concretes, ajuster en continu les dispositifs en fonction des retours terrain, et arbitrer entre contraintes techniques, attentes utilisateurs et logique produit. C'est precisement dans cet espace de tension, entre systeme et usage, que je situe aujourd'hui ma valeur.
 
-Je vous remercie pour votre attention et reste à votre disposition pour convenir d’un rendez-vous.
+Je vous prie d'agreer, Madame, Monsieur, l'expression de mes salutations distinguees.
 
-Cordialement,
-Vincent Ducastel"
+{prenom} {nom}"
+
+Produis uniquement la lettre finale, sans commentaire ni explication.

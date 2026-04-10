@@ -1,4 +1,4 @@
-﻿import os
+import os
 from dotenv import load_dotenv
 
 
@@ -65,11 +65,25 @@ DISPONIBILITE = os.getenv(
 TYPE_CONTRAT = os.getenv("TYPE_CONTRAT", "CDI")
 CV_CONTEXT_HINTS = os.getenv("CV_CONTEXT_HINTS", "")
 CV_PATH = os.getenv("CV_PATH", "cv.pdf")
+CV_PATH_PPTX = os.getenv("CV_PATH_PPTX", "template.pptx")
+CV_MODE = os.getenv("CV_MODE", "direct")  # direct, pptx, html
+PRIMARY_LLM = os.getenv("PRIMARY_LLM", "mistral")  # mistral, openai
 
-# Parametres du bot
+# Paramètres du bot
 MAX_PAGES = _env_int("MAX_PAGES", 15)
 MAX_OFFRES = _env_nullable_int("MAX_OFFRES", 100)
 POSTE_ACTUEL_FORCE = os.getenv("POSTE_ACTUEL_FORCE", "")
 DELAI_ENTRE_CANDIDATURES = _env_int("DELAI_ENTRE_CANDIDATURES", 10)
 SHOW_BROWSER = _env_bool("SHOW_BROWSER", True)
 LOG_FILE = os.getenv("LOG_FILE", "candidatures.json")
+
+# Paramètres du Générateur CV Dynamique
+import json
+def _env_dict(name: str):
+    val = os.getenv(name, "{}")
+    try:
+        return json.loads(val)
+    except:
+        return {}
+
+CV_BULLET_LIMITS = _env_dict("CV_BULLET_LIMITS")
